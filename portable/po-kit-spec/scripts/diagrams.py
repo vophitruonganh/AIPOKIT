@@ -21,7 +21,7 @@ import langpack as L
 TYPES = ['context', 'uc_overview', 'uc_module', 'process', 'linkmap', 'state', 'activity', 'sequence',
          'screen_map', 'flow', 'erd', 'decision', 'perm_matrix', 'timeline']
 AGENT_TYPES = {'process', 'sequence', 'flow', 'erd', 'decision', 'timeline'}   # need understanding: written as ```diagram``` blocks
-BLOCK_TYPES = {'context', 'process', 'journey', 'state', 'sequence', 'flow', 'erd', 'decision', 'timeline'}
+BLOCK_TYPES = {'usecase', 'context', 'process', 'journey', 'state', 'sequence', 'flow', 'erd', 'decision', 'timeline'}
 ALIAS = {'journey': 'process', 'wizard': 'flow'}
 # document profiles: which types are used and the per-feature cap (figures + diagram tables)
 PROFILES = {
@@ -447,21 +447,38 @@ def start_end():
 
 def actor_node(nid, label):
     return ('%s [shape=none, margin=0, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">'
-            '<TR><TD FIXEDSIZE="TRUE" WIDTH="40" HEIGHT="52"><IMG SRC="%s" SCALE="TRUE"/></TD></TR>'
+            '<TR><TD FIXEDSIZE="TRUE" WIDTH="34" HEIGHT="54"><IMG SRC="%s" SCALE="TRUE"/></TD></TR>'
             '<TR><TD><FONT POINT-SIZE="10.5" COLOR="%s"><B>%s</B></FONT></TD></TR></TABLE>>];' % (nid, ACTOR_IMG, T['ink'], hw(label, 16)))
 
-def uc_dot(actors, ucs, edges, title):
+UCREL = re.compile(r'^(?:UC-)?(\d+\.\d+)\s+(include|extend|«include»|«extend»)\s+(?:UC-)?(\d+\.\d+)\b', re.I)
+def uc_relations(module):
+    """UML «include» / «extend» between use cases of one module, taken ONLY from ```diagram usecase``` blocks
+    written by spec-diagrammer ("7.3 include 7.4", "7.2 extend 7.1"). Never guessed from text: a page link is not an include."""
+    blocks = list(module.get('diagrams', [])) + [b for f in module['features'] for b in f.get('diagrams', [])]
+    out = []
+    for b in blocks:
+        if b['type'] != 'usecase': continue
+        for l in b['body'].split('\n'):
+            m = UCREL.match(l.strip())
+            if m:
+                r = (m.group(1), m.group(3), m.group(2).strip('«»').lower())
+                if r not in out: out.append(r)
+    return out
+
+def uc_dot(actors, ucs, edges, title, rels=()):
     s = ['digraph G {', 'rankdir=LR; nodesep=0.22; ranksep=1.1; newrank=true;', head('spline'),
          'edge [arrowhead=none, color="%s", penwidth=1.3];' % T['edge_main']]
     left = actors[:(len(actors) + 1) // 2]; right = actors[(len(actors) + 1) // 2:]
     for i, a in enumerate(actors): s.append(actor_node('a%d' % i, a))
     s.append(lane('sys', title, acc(0)))
     for j, u in enumerate(ucs):
-        s.append('u%d [shape=box, style="rounded,filled", class="card", fillcolor="white", color="%s", penwidth=1.2, fontcolor="%s", label="%s", width=2.4, height=0.5, margin="0.18,0.08"];'
-                 % (j, T['primary_line'], T['ink'], wl(u, 26)))
+        s.append('u%d [shape=ellipse, style="filled", class="card", fillcolor="white", color="%s", penwidth=1.4, fontcolor="%s", label="%s", width=2.6, height=0.62, margin="0.12,0.04"];'
+                 % (j, T['primary_line'], T['ink'], wl(u, 24)))
     s.append('}')
     for (i, j) in edges:
         s.append(('a%d -> u%d;' if actors[i] in left else 'u%d -> a%d;') % ((i, j) if actors[i] in left else (j, i)))
+    for a, b, kind in rels:   # UML: dashed dependency with open arrow and a stereotype label
+        s.append('u%d -> u%d [style=dashed, arrowhead=vee, arrowsize=0.7, color="%s", fontcolor="%s", fontsize=9, constraint=false, label="«%s»"];' % (a, b, T['muted'], T['muted'], kind))
     if left: s.append('{rank=same; %s}' % ' '.join('a%d' % actors.index(a) for a in left))
     if right: s.append('{rank=same; %s}' % ' '.join('a%d' % actors.index(a) for a in right))
     s.append('}')
@@ -481,27 +498,40 @@ def context_dot(product, actors, systems):
     return '\n'.join(s)
 
 def activity_dot(rows, alts=()):
-    """rows: [(lane, text, dashed)]; alts: [(after_index, condition, lane, text)]"""
+    """UML activity. rows: [(lane, text, unverified)]; alts: [(after_index, condition, lane, text)].
+    A branch after step i becomes a decision node (diamond) between step i and i+1: the main path carries [else],
+    each alternative carries its [guard]."""
     lanes = []
     for a, _, _ in rows:
         if a not in lanes: lanes.append(a)
     for _, _, a, _ in alts:
         if a not in lanes: lanes.append(a)
-    s = ['digraph G {', 'rankdir=TB; nodesep=0.35; ranksep=0.42; newrank=true; compound=true;', head()] + start_end()
+    groups = collections.OrderedDict()
+    for k, (i, cond, a, t) in enumerate(alts): groups.setdefault(min(i, len(rows) - 1), []).append((k, cond))
+    s = ['digraph G {', 'rankdir=TB; nodesep=0.4; ranksep=0.42; newrank=true; compound=true; forcelabels=true;', head()] + start_end()
     for li, ln in enumerate(lanes):
         s.append(lane(li, ln, acc(li)))
         for k, (a, t, dsh) in enumerate(rows):
-            if a == ln: s.append(card('n%d' % k, t, 30, num=k + 1, color=acc(li), border=T['unv_line'] if dsh else None))
+            if a == ln:
+                s.append(card('n%d' % k, t, 30, num=k + 1, color=acc(li), border=T['unv_line'] if dsh else None))
+                if k in groups:   # the decision node sits in the lane of the step it follows
+                    s.append('d%d [shape=diamond, label="", width=0.32, height=0.32, style=filled, fillcolor="white", color="%s", penwidth=1.4, class="card"];' % (k, T['alt_ink']))
         for k, (_, cond, a, t) in enumerate(alts):
-            if a == ln: s.append(card('x%d' % k, t, 30, fill=T['alt_fill'], border=T['alt_line'], top=cond))
+            if a == ln: s.append(card('x%d' % k, t, 30, fill=T['alt_fill'], border=T['alt_line']))
         if li == 0: s.append('start;')
         s.append('}')
+    guard = lambda c: hesc('[' + clean(c, 40) + ']')
     if rows:
         s.append('start -> n0;')
-        for k in range(len(rows) - 1): s.append('n%d -> n%d;' % (k, k + 1))
-        s.append('n%d -> end;' % (len(rows) - 1))
-    for k, (i, cond, _, _) in enumerate(alts):
-        s.append('n%d -> x%d [style=dashed, color="%s"];' % (min(i, len(rows) - 1), k, T['alt_line']))
+        for k in range(len(rows)):
+            nxt = 'n%d' % (k + 1) if k + 1 < len(rows) else 'end'
+            if k in groups:
+                s.append('n%d -> d%d;' % (k, k))
+                s.append('d%d -> %s [xlabel=<<FONT COLOR="%s" POINT-SIZE="8.5">[else]</FONT>>];' % (k, nxt, T['muted']))
+                for x, cond in groups[k]:
+                    s.append('d%d -> x%d [color="%s", xlabel=<<FONT COLOR="%s" POINT-SIZE="8.5"><B>%s</B></FONT>>];' % (k, x, T['alt_line'], T['alt_ink'], '<BR/>'.join(hesc(w) for w in wrap('[' + clean(cond, 60) + ']', 26))))
+            else:
+                s.append('n%d -> %s;' % (k, nxt))
     s.append('}')
     return '\n'.join(s)
 
@@ -518,7 +548,7 @@ def state_dot(rows):
         a0 = 'start' if (not a or START.match(a)) else nid(a)
         if b == '[*]': b0 = 'end'; has_end = True
         else: b0 = nid(b)
-        edges.append('%s -> %s [label="%s"%s];' % (a0, b0, wl(lab, 26), ', style=dashed, color="%s"' % T['unv_line'] if dsh else ''))
+        edges.append('%s -> %s [label="%s"%s];' % (a0, b0, wl(lab, 26), ', color="%s", fontcolor="%s"' % (T['unv_line'], '#B45309') if dsh else ''))
     for k, (x, i) in enumerate(ids.items()):
         s.append('%s [shape=box, class="card", style="rounded,filled", fillcolor="white", color="%s", penwidth=1.6, fontcolor="%s", label=<<B>%s</B>>, margin="0.2,0.08"];'
                  % (i, acc(k), T['ink'], hw(x, 20)))
@@ -529,13 +559,14 @@ def state_dot(rows):
 def sequence_dot(parts, msgs):
     """parts: [name]; msgs: [(src, dst, label, dashed)] — fixed coordinates (neato -n2): straight lifelines and level arrows"""
     n = len(parts); P = {p: i for i, p in enumerate(parts)}
-    longest = max([len(x) for _, _, lab, _ in msgs for x in wrap(lab, 26)] + [12])
+    longest = max([len(x) for m in msgs for x in wrap(m[2], 26)] + [12])
     W = max(150, int(longest * 5.6) + 50); STEP = 46; TOP = 0
     act = acc(0)
     s = ['// engine=neato', 'digraph G {', 'outputorder=edgesfirst;', head('line'),
          'node [shape=point, width=0.01, height=0.01, color="%s", label=""];' % T['edge_soft']]
     ys = []; y = TOP - 48
-    for a_, b_, _, _ in msgs:
+    for m_ in msgs:
+        a_, b_ = m_[0], m_[1]
         ys.append(y); y -= STEP + (24 if a_ == b_ else 0)
     bottom = y + STEP - 30
     for i, p in enumerate(parts):
@@ -544,9 +575,11 @@ def sequence_dot(parts, msgs):
                  % (i, acc(i), T['ink'], hw(p, 18), x, TOP))
         s.append('b%d [pos="%d,%d"];' % (i, x, bottom))
         s.append('p%d -> b%d [style=dashed, arrowhead=none, color="%s", penwidth=1.0];' % (i, i, T['edge_soft']))
-    for r, (a, b, lab, dsh) in enumerate(msgs):
-        y = ys[r]; ia, ib = P[a], P[b]; st = ', style=dashed' if dsh else ''
-        lb = 'shape=box, style=filled, fillcolor=white, color=white, margin="0.03,0.01", width=0, height=0, fontsize=9.5, fontcolor="%s"' % T['text']
+    for r, m in enumerate(msgs):
+        a, b, lab, rep_ = m[:4]; unv_ = m[4] if len(m) > 4 else False
+        y = ys[r]; ia, ib = P[a], P[b]
+        st = ', style=dashed, arrowhead=vee' if rep_ else ''          # UML: dashed line + open arrow = reply
+        lb = 'shape=box, style=filled, fillcolor=white, color=white, margin="0.03,0.01", width=0, height=0, fontsize=9.5, fontcolor="%s"' % ('#B45309' if unv_ else T['text'])
         if ia == ib:
             x = ia * W
             s.append('s%d_0 [pos="%d,%d"]; s%d_1 [pos="%d,%d"]; s%d_2 [pos="%d,%d"]; s%d_3 [pos="%d,%d"];' % (r, x, y, r, x + 34, y, r, x + 34, y - 22, r, x, y - 22))
@@ -677,7 +710,7 @@ def parse_sequence(body):
         a, arrow, b, lab = clean(m.group(1)), m.group(2), clean(m.group(3)), clean(m.group(4) or '', 70)
         for x in (a, b):
             if x not in parts: parts.append(x)
-        msgs.append((a, b, lab, arrow == '-->' or bool(UNVERIFIED.search(l))))
+        msgs.append((a, b, lab, arrow == '-->', bool(UNVERIFIED.search(l))))
     return parts, msgs
 
 def parse_state(body):
@@ -733,6 +766,7 @@ def node_count(d):
     t = d['type']; b = d['body']
     if t in ('process', 'flow'): r, a = parse_flow(b); return len(r) + len(a)
     if t == 'sequence': p, m = parse_sequence(b); return len(p) + len(m)
+    if t == 'usecase': return sum(1 for l in b.split('\n') if UCREL.match(l.strip()))
     if t == 'state': return len({x for r in parse_state(b) for x in r[:2]})
     if t == 'erd': e, _ = parse_erd(b); return len(e)
     if t == 'timeline': return len(parse_timeline(b))

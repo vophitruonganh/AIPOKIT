@@ -36,7 +36,7 @@ In 2.5 the old "longest flow of each module" figure is kept only when 2.6 does n
 
 ## Block syntax (fenced code inside the md files)
 
-Put a block in the feature it belongs to (anywhere in the feature, usually after Main flow), or in `0-overview.md` for document-level types (process, context, erd). The first line is ` ```diagram <type>: <title>`. Labels are short (≤90 characters, aim for 40), in the spec language, with no personal data. A line that carries `(Unverified)`, `(PO proposal)` or `(Inferred)` is drawn dashed. Lines starting with `#` are comments. Keep each block ≤25 nodes; split bigger ones.
+Put a block in the feature it belongs to (anywhere in the feature, usually after Main flow), or in `0-overview.md` for document-level types (process, context, erd). The first line is ` ```diagram <type>: <title>`. Labels are short (≤90 characters, aim for 40), in the spec language, with no personal data. A line that carries `(Unverified)`, `(PO proposal)` or `(Inferred)` is drawn in amber (never dashed: in UML a dashed arrow means a reply or a dependency). Lines starting with `#` are comments. Keep each block ≤25 nodes; split bigger ones.
 
 **process / journey / flow**: one step per line `Lane | step`; a branch after the previous step is `? condition -> Lane | what happens`.
 ````
@@ -49,7 +49,7 @@ Cổng thanh toán | Thu phí (7.4)
 ```
 ````
 
-**sequence**: `A -> B: message`; `-->` is a reply or an unverified call.
+**sequence**: `A -> B: message` is a call (solid); `A --> B: message` is a reply only (dashed). Mark an unverified message with `(Unverified)`, which colours its label amber.
 ````
 ```diagram sequence: Thanh toán qua cổng
 Bệnh nhân -> Web: Bấm "Thanh toán"
@@ -93,7 +93,18 @@ Hồ sơ 1--n Lịch khám: đặt cho
 ```
 ````
 
-**context**: `System | what it exchanges`, one external system per line.
+**context**: `System | what it exchanges`, one external system per line. The text is printed on the data-flow arrow, so name the data, not the system.
+
+**usecase**: relations between use cases of one module, one per line: `7.3 include 7.4` (7.3 always runs 7.4) or `7.2 extend 7.1` (7.2 optionally adds to 7.1 under a condition). Drawn as dashed arrows labelled «include» / «extend». Write a relation only when the behaviour really is included or extended; a page link or a "go back" button is not a relation.
+````
+```diagram usecase: Quan hệ giữa các use case đặt lịch
+7.2 extend 7.1
+7.3 include 7.4
+```
+````
+
+## Notation (printed as a table at the end of section 1)
+Actor = stick figure; use case = ellipse; «include» / «extend» = dashed arrow with stereotype; activity = rounded card with step number, ● start, ◉ end, ◇ decision with `[guard]` / `[else]` on the outgoing arrows; violet card = alternate flow; amber = unverified; sequence: solid arrow = call, dashed arrow = reply; ERD cardinalities 1, n, 0..1, 1..n; module matrix cell = number of links.
 
 ## Rules
 - Draw only what the spec already says. A diagram never adds a fact; if a step is not in the spec, add it to the spec first with its source label.

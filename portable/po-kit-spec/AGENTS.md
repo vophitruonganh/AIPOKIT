@@ -148,7 +148,7 @@ Group the open questions by role, then by module. For each role: ask the user to
 ## Roles
 
 ### spec-diagrammer
-Writes the diagram blocks (process, sequence, wizard flow, ERD, decision table, timeline) that the diagram planner lists as missing, using only facts already in the spec. Never edits feature text. Full prompt: `prompts/spec-diagrammer.md`.
+Writes the diagram blocks (process, usecase relations, sequence, wizard flow, ERD, decision table, timeline) that the diagram planner lists as missing, using only facts already in the spec. Never edits feature text. Full prompt: `prompts/spec-diagrammer.md`.
 
 ### spec-recon
 Phase 1 recon. Maps every screen, API call, enum, role and glossary term of a running product (website, web app or mobile app) and records what cannot be seen. Does not write per-feature specs. Full prompt: `prompts/spec-recon.md`.

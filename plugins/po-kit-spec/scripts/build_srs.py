@@ -567,6 +567,9 @@ if want('context'):
     _systems = D.parse_context(_ctxb['body']) if _ctxb else D.external_systems(CFG)
     para(S('ctx_intro', PRODUCT))
     figure(dot_render(D.context_dot(PRODUCT, D.human_actors(CFG), _systems), 'context'), 1, S('ctx_fig', PRODUCT), width=15)
+if not CLASSIC or want('context'):
+    para(S('notation_intro'))
+    generic_table([SR['notation_head']] + SR['notation_rows'], 1, S('notation_title'), widths=[5.0, 11.0], size=10)
 page_break()
 
 # ================================================================= 2 FUNCTIONAL REQUIREMENTS
@@ -647,7 +650,10 @@ for k, m in enumerate(modules):
             if a not in actors: actors.append(a)
     ucs = ['UC-%s %s' % (f['id'], f['name']) for f in m['features']]
     ed = [(actors.index(a), j) for j, f in enumerate(m['features']) for a in m['map'].get(f['id'], {}).get('roles', [])]
-    png = uc_diagram('uc_m%d' % m['num'], actors, ucs, ed, '%d. %s' % (m['num'], m['name']))
+    _dm = next((x for x in DSPEC['modules'] if x['num'] == m['num']), None)
+    _fi = [f['id'] for f in m['features']]
+    _rels = [(_fi.index(x), _fi.index(y), kd) for x, y, kd in (D.uc_relations(_dm) if _dm else []) if x in _fi and y in _fi]
+    png = dot_render(D.uc_dot(actors, ucs, ed, '%d. %s' % (m['num'], m['name']), _rels), 'uc_m%d' % m['num'])
     figure(png, 2, S('mod_fig', m['name']), width=14.5)
     if m.get('roles') and not CLASSIC:
         para(S('roles_in_module'), bold=True, italic=True, space_after=4)

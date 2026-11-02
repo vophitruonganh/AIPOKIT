@@ -284,6 +284,58 @@
     "linkmap_fig": "Sơ đồ liên kết giữa các module",
     "flow_ref": "Luồng chính của use case tiêu biểu nhất, %s (%s), được vẽ kèm các nhánh ở mục 2.6.",
     "h2_5_x": "2.5.%d %s",
-    "linkmap_matrix_intro": "Bảng dưới đây cho biết các module chuyển tiếp cho nhau bao nhiêu lần: mỗi ô là số liên kết use case từ module ở hàng sang module ở cột, ô càng đậm thì liên kết càng nhiều, cột cuối là tổng liên kết đi ra."
+    "linkmap_matrix_intro": "Bảng dưới đây cho biết các module chuyển tiếp cho nhau bao nhiêu lần: mỗi ô là số liên kết use case từ module ở hàng sang module ở cột, ô càng đậm thì liên kết càng nhiều, cột cuối là tổng liên kết đi ra.",
+    "notation_title": "Quy ước ký hiệu trong biểu đồ",
+    "notation_intro": "Các biểu đồ theo ký hiệu UML; màu và viền dưới đây cho biết mức độ chắc chắn của thông tin.",
+    "notation_head": [
+      "Ký hiệu",
+      "Ý nghĩa"
+    ],
+    "notation_rows": [
+      [
+        "Người que; hình elip",
+        "Tác nhân; use case (UML)"
+      ],
+      [
+        "Mũi tên nét đứt «include»",
+        "Use case gọi use case khác trong luồng chính"
+      ],
+      [
+        "Mũi tên nét đứt «extend»",
+        "Use case mở rộng use case gốc ở luồng thay thế"
+      ],
+      [
+        "Chấm đen; vòng tròn có chấm",
+        "Điểm bắt đầu; điểm kết thúc"
+      ],
+      [
+        "Thẻ có số",
+        "Một bước của luồng, số là thứ tự bước"
+      ],
+      [
+        "Hình thoi, nhãn [điều kiện]",
+        "Nút quyết định; [else] là đường đi chính"
+      ],
+      [
+        "Thẻ nền tím",
+        "Bước của luồng thay thế"
+      ],
+      [
+        "Viền cam, chữ cam",
+        "Chi tiết chưa xác minh, suy ra hoặc đề xuất của PO"
+      ],
+      [
+        "Mũi tên liền; mũi tên nét đứt mũi mở",
+        "Thông điệp gọi; thông điệp trả về (biểu đồ tuần tự)"
+      ],
+      [
+        "1, n, 0..1 ở đầu đường nối",
+        "Số bản ghi mỗi đầu quan hệ (ERD)"
+      ],
+      [
+        "Ô ma trận có số",
+        "Số liên kết use case giữa hai module, ô đậm là nhiều liên kết"
+      ]
+    ]
   }
 }

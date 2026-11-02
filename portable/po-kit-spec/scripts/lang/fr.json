@@ -286,6 +286,58 @@
     "linkmap_fig": "Carte des liens entre modules",
     "flow_ref": "Le flux principal du cas d'utilisation le plus représentatif, %s (%s), est dessiné avec ses branches en section 2.6.",
     "h2_5_x": "2.5.%d %s",
-    "linkmap_matrix_intro": "La matrice ci-dessous indique combien de fois les modules se passent la main : chaque cellule est le nombre de liens entre cas d'utilisation du module de la ligne vers celui de la colonne, plus la cellule est foncée plus il y a de liens, la dernière colonne donne le total sortant."
+    "linkmap_matrix_intro": "La matrice ci-dessous indique combien de fois les modules se passent la main : chaque cellule est le nombre de liens entre cas d'utilisation du module de la ligne vers celui de la colonne, plus la cellule est foncée plus il y a de liens, la dernière colonne donne le total sortant.",
+    "notation_title": "Conventions des diagrammes",
+    "notation_intro": "Les diagrammes suivent la notation UML ; les couleurs et bordures ci-dessous indiquent le degré de certitude de l'information.",
+    "notation_head": [
+      "Symbole",
+      "Signification"
+    ],
+    "notation_rows": [
+      [
+        "Bonhomme ; ellipse",
+        "Acteur ; cas d'utilisation (UML)"
+      ],
+      [
+        "Flèche pointillée «include»",
+        "Un cas d'utilisation en appelle un autre dans son flux principal"
+      ],
+      [
+        "Flèche pointillée «extend»",
+        "Un cas d'utilisation étend le cas de base dans un flux alternatif"
+      ],
+      [
+        "Point noir ; point cerclé",
+        "Début ; fin"
+      ],
+      [
+        "Carte numérotée",
+        "Une étape du flux, le numéro donne l'ordre"
+      ],
+      [
+        "Losange, étiquette [condition]",
+        "Nœud de décision ; [else] est le chemin principal"
+      ],
+      [
+        "Carte violette",
+        "Étape d'un flux alternatif"
+      ],
+      [
+        "Bordure orange, texte orange",
+        "Détail non vérifié, déduit ou proposé par le PO"
+      ],
+      [
+        "Flèche pleine ; flèche pointillée ouverte",
+        "Message d’appel ; message de retour (diagramme de séquence)"
+      ],
+      [
+        "1, n, 0..1 aux extrémités",
+        "Nombre d'enregistrements de chaque côté d'une relation (ERD)"
+      ],
+      [
+        "Nombre dans une cellule",
+        "Liens entre cas d’utilisation de deux modules, plus foncé = plus de liens"
+      ]
+    ]
   }
 }

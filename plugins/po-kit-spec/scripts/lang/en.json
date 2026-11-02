@@ -284,6 +284,58 @@
     "linkmap_fig": "Cross-module link map",
     "flow_ref": "The main flow of the most representative use case, %s (%s), is drawn with its branches in section 2.6.",
     "h2_5_x": "2.5.%d %s",
-    "linkmap_matrix_intro": "The matrix below shows how often modules hand off to each other: each cell is the number of use-case links from the row module to the column module, darker means more links, and the last column is the total of outgoing links."
+    "linkmap_matrix_intro": "The matrix below shows how often modules hand off to each other: each cell is the number of use-case links from the row module to the column module, darker means more links, and the last column is the total of outgoing links.",
+    "notation_title": "Diagram notation",
+    "notation_intro": "Diagrams follow UML notation; the colours and borders below show how certain the information is.",
+    "notation_head": [
+      "Symbol",
+      "Meaning"
+    ],
+    "notation_rows": [
+      [
+        "Stick figure; ellipse",
+        "Actor; use case (UML)"
+      ],
+      [
+        "Dashed arrow «include»",
+        "A use case calls another one in its main flow"
+      ],
+      [
+        "Dashed arrow «extend»",
+        "A use case extends the base one in an alternate flow"
+      ],
+      [
+        "Black dot; ringed dot",
+        "Start; end"
+      ],
+      [
+        "Numbered card",
+        "A step of the flow, the number is its order"
+      ],
+      [
+        "Diamond, [guard] label",
+        "Decision node; [else] is the main path"
+      ],
+      [
+        "Violet card",
+        "Step of an alternate flow"
+      ],
+      [
+        "Amber border, amber text",
+        "Unverified, inferred or PO-proposed detail"
+      ],
+      [
+        "Solid arrow; dashed open arrow",
+        "Call message; reply message (sequence diagram)"
+      ],
+      [
+        "1, n, 0..1 at line ends",
+        "Number of records at each end of a relationship (ERD)"
+      ],
+      [
+        "Number in a matrix cell",
+        "Use-case links between two modules, darker means more"
+      ]
+    ]
   }
 }
