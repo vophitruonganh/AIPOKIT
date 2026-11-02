@@ -1,0 +1,20 @@
+{
+  "lang": "en",
+  "product": "Expense Book",
+  "version": "0.1",
+  "cover_lines": ["Personal expense tracking app"],
+  "source_line": "Source: sample data for the toolkit",
+  "source_detail": "(synthetic example, not a real product)",
+  "date_line": "October 2026",
+  "files": ["0-overview", "1-expenses", "2-reports"],
+  "purpose": "This document describes {product}. It is a small synthetic example that shows the structure the toolkit expects.",
+  "out_of_scope": "Out of scope: mobile apps.",
+  "references": ["Internal sample material."],
+  "uc_permissions": "UC-1.1",
+  "external_actors_note": "There are no external systems.",
+  "actors": ["User", "System"],
+  "role_map": {},
+  "precondition": "The actor is logged in.",
+  "ui_layout": "{product} is a single-column web application.",
+  "constraints": ["A modern browser is required."]
+}

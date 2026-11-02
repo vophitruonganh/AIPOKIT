@@ -1,0 +1,264 @@
+{
+  "code": "en",
+  "name": "English",
+  "blocks": {
+    "problem_value": "Problem & value",
+    "user_stories": "User stories",
+    "main_flow": "Main flow",
+    "alt_flow": "Alternate flows & exceptions",
+    "business_rules": "Business rules",
+    "ui_data": "UI & data",
+    "acceptance": "Acceptance criteria",
+    "field_spec": "Field specification",
+    "lifecycle": "State lifecycle",
+    "permissions": "Permissions by action",
+    "ui_states": "UI states",
+    "edge_cases": "Edge cases & error handling",
+    "module_links": "Module links",
+    "notifications": "Notifications, audit log & print/export",
+    "test_cases": "Test cases",
+    "open_questions": "Open questions & assumptions",
+    "formulas": "Formulas & calculations"
+  },
+  "labels": {
+    "observed": "Observed",
+    "inferred": "Inferred from API",
+    "proposal": "PO proposal",
+    "unverified": "Unverified",
+    "decided": "PO decided"
+  },
+  "answers": {
+    "verified": "Verified",
+    "partial": "Partly verified",
+    "cannot": "Cannot verify",
+    "decided": "PO decided"
+  },
+  "tc_types": {
+    "main": "Main",
+    "alt": "Alternate",
+    "edge": "Edge",
+    "perm": "Permission"
+  },
+  "na": "Not applicable",
+  "question_col": "Question",
+  "claims_regex": "\\b(always|never|at most \\d|up to \\d)\\b",
+  "proposal_prefix": "Proposal: ",
+  "system_actor": "System",
+  "system_clause_regex": "(,| then) [sS]ystem ",
+  "lower_first": false,
+  "module_sections": {
+    "summary": "Summary",
+    "roles": "Roles & permissions",
+    "feature_map": "Feature map",
+    "appendix": "Appendix"
+  },
+  "overview": {
+    "product": "1. Product overview",
+    "glossary": "Standard glossary",
+    "reading": "How to read this document",
+    "roles": "User roles",
+    "conventions": "Common conventions for all screens",
+    "navigation": "2. Navigation structure",
+    "modules": "3.",
+    "compliance": "4. Compliance & security",
+    "bugs": "Bugs and spec deviations",
+    "gaps": "5. Gaps and points to confirm"
+  },
+  "field_hdr": [
+    "Field",
+    "Type",
+    "Required",
+    "Format / length",
+    "Default",
+    "Validation",
+    "Error message"
+  ],
+  "rename": {
+    "business_rules": "Business rules",
+    "acceptance": "Acceptance criteria",
+    "test_cases": "Test cases",
+    "ui_data": "UI & screen data"
+  },
+  "stats": {
+    "title": "# Verification coverage",
+    "legend": "\"Verified\" = tried on the real app; \"Partial\" = only one side checked; \"Cannot verify\" = reason recorded; \"Assumption\" = not tried. TC = written test cases. \"PO decided\" = answered by the Product Owner.",
+    "hdr": [
+      "Feature",
+      "Questions",
+      "Verified",
+      "Partial",
+      "Cannot verify",
+      "PO decided",
+      "Assumption",
+      "TC"
+    ],
+    "total": "Total"
+  },
+  "srs": {
+    "cover_title": "SOFTWARE REQUIREMENTS SPECIFICATION",
+    "cover_sub": "(SRS)",
+    "version": "Version ",
+    "toc": "Table of contents",
+    "lof": "List of figures and tables",
+    "fig": "Figure",
+    "tbl": "Table",
+    "h1": "1 Introduction",
+    "h1_1": "1.1 Purpose",
+    "h1_2": "1.2 Scope",
+    "h1_3": "1.3 Glossary",
+    "h1_4": "1.4 References",
+    "h1_5": "1.5 Overview",
+    "audience": "This document is for the Product Owner, the development team, testers (QA), legal and other stakeholders. Every requirement has a code (UC, BR, AC, TC) so it can be quoted directly in tickets and test scripts.",
+    "scope_modules": "The document covers %d business modules with %d use cases: %s.",
+    "scope_item": "%d. %s (%d use cases)",
+    "gloss_hdr": [
+      "Term",
+      "Meaning"
+    ],
+    "gloss_title": "Glossary",
+    "gloss_rows": [
+      [
+        "Software Requirements Specification (SRS)",
+        "Specification of software requirements"
+      ],
+      [
+        "Use case (UC)",
+        "A system function described by actors, main event flow and alternate flows; code UC-<module>.<feature>"
+      ],
+      [
+        "Business rule (BR)",
+        "A business rule, code BR-<module>.<feature>.<number>"
+      ],
+      [
+        "Acceptance criteria (AC)",
+        "Acceptance criterion in Given/When/Then form, code AC-<module>.<feature>.<number>"
+      ],
+      [
+        "Test case (TC)",
+        "A test case, code TC-<module>.<feature>.<number>"
+      ],
+      [
+        "PO",
+        "Product Owner"
+      ]
+    ],
+    "not_used": ". Do not use: ",
+    "legal_prefix": "Legal bases cited: ",
+    "overview_intro": "This document follows the IEEE 830 structure and has four parts:",
+    "parts": [
+      "Part 1: Introduction: purpose, scope, glossary and reading conventions.",
+      "Part 2: Functional requirements: actors, function list, use case diagrams, business processes and detailed specification of each use case.",
+      "Part 3: Non-functional requirements: user interface, security and compliance, constraints.",
+      "Part 4: Appendices: bugs found during verification, open issues, integration and data model of each module."
+    ],
+    "uc_explain": "Each use case in section 2.6 has: a function specification table (code, actor, description, trigger, preconditions, main and alternate event flows, postconditions), an input data table, and supplementary specification (business rules, formulas, state lifecycle, permissions, UI states, edge cases, module links, audit log, acceptance criteria, test cases, open questions). In the data table the template's \"Example\" column is replaced by an \"Error message\" column; example values are in the test cases.",
+    "label_intro": "Every detail carries a source label showing how certain it is:",
+    "label_title": "Source label of each detail",
+    "partial_replace": [
+      "Appendix A/B",
+      "Part 4 (Appendices)"
+    ],
+    "skip_reading_contains": [
+      "Tab"
+    ],
+    "h2": "2 Functional requirements",
+    "h2_1": "2.1 Actors",
+    "h2_2": "2.2 System functions",
+    "h2_3": "2.3 Overview use case diagram",
+    "h2_4": "2.4 Decomposed use case diagrams",
+    "h2_4_n": "2.4.%d Decomposition of use case \"%s\"",
+    "h2_5": "2.5 Business processes",
+    "h2_5_n": "2.5.%d %s process",
+    "h2_6": "2.6 Use case specifications",
+    "h2_6_m": "2.6.%d Module %d. %s",
+    "h2_6_f": "2.6.%d.%s %s (UC-%s)",
+    "actors_intro": "The system serves the actors below. Menus and screens depend on the account's permission group; the detailed permission matrix is in use case %s. \"System\" is the internal actor that validates, stores and responds; %s",
+    "actors_title": "System actors",
+    "funcs_intro": "The system has %d business modules. Each feature of a module is a use case, code UC-<module>.<feature>.",
+    "dash_title": "0. Overview (Dashboard): ",
+    "uc_list_hdr": [
+      "UC code",
+      "Use case name",
+      "Screen",
+      "Main actors",
+      "Status on dev"
+    ],
+    "uc_list_title": "Use case list of module %d. %s",
+    "diagram_intro": "To make the actors and functional requirements easier to see, the functions are modelled as use case diagrams in the following sections.",
+    "ov_fig": "Overview use case diagram",
+    "ov_note": "Note: an edge between an actor and a module follows the \"Main module\" column of the actor table (Table 2-1).",
+    "mod_fig": "Use case diagram of module %s",
+    "roles_in_module": "Roles and permissions in the module:",
+    "state_fig": "State diagram of ",
+    "user": "User",
+    "flow_intro": "The diagram below shows the main event flow of the most representative use case of the module, UC-%s %s; the flows of other use cases are in section 2.6.%d.",
+    "act_fig": "Activity diagram of %s",
+    "uc_intro": "Each use case has a function specification table, an input data table (when the screen has input fields) and a supplementary specification. In the \"Performed by\" column the actor is derived from the subject of each step in the source specification.",
+    "trigger_default": "The user opens the screen ",
+    "dialog_words": [
+      "Dialog",
+      "dialog"
+    ],
+    "dialog_pre": " Currently on the screen that contains the dialog: ",
+    "dialog_strip": "Dialog ",
+    "r_code": "Use case code",
+    "r_name": "Use case name",
+    "r_actor": "Actors",
+    "r_desc": "Description",
+    "r_screen": "Screen",
+    "r_trigger": "Trigger",
+    "r_pre": "Preconditions",
+    "r_post": "Postconditions",
+    "r_status": "Status on dev",
+    "r_main": "Main event flow (Success)",
+    "r_alt": "Alternate event flow",
+    "none": "None",
+    "flow_hdr": [
+      "No.",
+      "Performed by",
+      "Action"
+    ],
+    "status_default": "Unverified",
+    "uc_table_title": "Function specification \"%s\"",
+    "input_intro": "* The input data has the following fields:",
+    "input_hdr": [
+      "No.",
+      "Field",
+      "Description",
+      "Required?",
+      "Valid condition",
+      "Error message"
+    ],
+    "default_word": "; default: ",
+    "input_title": "Data of function \"%s\"",
+    "h3": "3 Non-functional requirements",
+    "h3_1": "3.1 User interface",
+    "h3_2": "3.2 Security and compliance",
+    "h3_3": "3.3 Constraints",
+    "nav_title": "Navigation structure of the application",
+    "observed_conv": "Observed UI conventions: ",
+    "observed_conv_strip": "Common conventions observed:",
+    "conv_intro": "Common conventions for all screens (PO proposal, applies when a use case says otherwise):",
+    "conv_title": "Common conventions for all screens",
+    "conv_skip": "The conventions below",
+    "legal_title": "Legal obligations and how the product meets them",
+    "perm_para": "Users may only use functions and access data that match their permission group; the detailed permission matrix is in ",
+    "components_intro": "System components and environment:",
+    "components_title": "System components",
+    "plans_intro": "Limits by service plan:",
+    "plans_title": "Published service plans",
+    "plans_note_prefixes": [
+      "Note"
+    ],
+    "components_note_prefixes": [],
+    "h4": "4 Appendices",
+    "h4_1": "4.1 Bugs and spec deviations found during verification",
+    "h4_1_title": "Bugs and spec deviations found during verification",
+    "h4_2": "4.2 Gaps and points to confirm",
+    "h4_2_title": "Gaps and points to confirm",
+    "h4_n": "4.%d Module %s appendix: integration, data, test cases",
+    "appendix_strip": "^Appendix [A-E] — ",
+    "doc_title": "Software requirements specification — ",
+    "lc_strip": " (shared by the whole module): "
+  }
+}

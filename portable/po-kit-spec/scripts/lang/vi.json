@@ -1,0 +1,264 @@
+{
+  "code": "vi",
+  "name": "Tiếng Việt",
+  "blocks": {
+    "problem_value": "Vấn đề & giá trị",
+    "user_stories": "User stories",
+    "main_flow": "Luồng chính",
+    "alt_flow": "Luồng phụ & ngoại lệ",
+    "business_rules": "Business rules",
+    "ui_data": "Giao diện & dữ liệu",
+    "acceptance": "Acceptance criteria",
+    "field_spec": "Đặc tả trường dữ liệu",
+    "lifecycle": "Vòng đời trạng thái",
+    "permissions": "Phân quyền theo hành động",
+    "ui_states": "Trạng thái giao diện",
+    "edge_cases": "Trường hợp biên & xử lý lỗi",
+    "module_links": "Liên kết module",
+    "notifications": "Thông báo, nhật ký & in/xuất",
+    "test_cases": "Test case",
+    "open_questions": "Cần xác nhận",
+    "formulas": "Công thức & tính toán"
+  },
+  "labels": {
+    "observed": "Quan sát",
+    "inferred": "Suy từ API",
+    "proposal": "Đề xuất PO",
+    "unverified": "Chưa xác minh",
+    "decided": "PO đã chốt"
+  },
+  "answers": {
+    "verified": "Đã xác minh",
+    "partial": "Đã xác minh một phần",
+    "cannot": "Chưa kiểm được",
+    "decided": "PO đã chốt"
+  },
+  "tc_types": {
+    "main": "Chính",
+    "alt": "Phụ",
+    "edge": "Biên",
+    "perm": "Quyền"
+  },
+  "na": "Không áp dụng",
+  "question_col": "Câu hỏi",
+  "claims_regex": "\\b(luôn|không bao giờ|tối đa \\d)",
+  "proposal_prefix": "Đề xuất: ",
+  "system_actor": "Hệ thống",
+  "system_clause_regex": "(,| thì) [hH]ệ thống ",
+  "lower_first": true,
+  "module_sections": {
+    "summary": "Tóm tắt",
+    "roles": "Vai trò & quyền",
+    "feature_map": "Bản đồ tính năng",
+    "appendix": "Phụ lục"
+  },
+  "overview": {
+    "product": "1. Tổng quan sản phẩm",
+    "glossary": "Thuật ngữ chuẩn",
+    "reading": "Cách đọc tài liệu",
+    "roles": "Vai trò người dùng",
+    "conventions": "Quy ước chung cho mọi màn hình",
+    "navigation": "2. Cấu trúc điều hướng",
+    "modules": "3.",
+    "compliance": "4. Tuân thủ & bảo mật",
+    "bugs": "Lỗi và lệch spec",
+    "gaps": "5. Khoảng trống và điểm cần xác nhận"
+  },
+  "field_hdr": [
+    "Trường",
+    "Kiểu",
+    "Bắt buộc",
+    "Định dạng / độ dài",
+    "Mặc định",
+    "Quy tắc kiểm tra",
+    "Thông báo lỗi"
+  ],
+  "rename": {
+    "business_rules": "Quy tắc nghiệp vụ (Business rules)",
+    "acceptance": "Tiêu chí chấp nhận (Acceptance criteria)",
+    "test_cases": "Ca kiểm thử (Test case)",
+    "ui_data": "Giao diện & dữ liệu màn hình"
+  },
+  "stats": {
+    "title": "# Thống kê mức độ chạy thử",
+    "legend": "\"Đã xác minh\" = đã thao tác thật; \"Một phần\" = mới kiểm một phía; \"Chưa kiểm được\" = đã ghi lý do; \"Còn giả định\" = chưa thao tác. TC = số test case đã viết. \"PO đã chốt\" = Product Owner đã trả lời.",
+    "hdr": [
+      "Tính năng",
+      "Câu hỏi",
+      "Đã xác minh",
+      "Một phần",
+      "Chưa kiểm được",
+      "PO đã chốt",
+      "Còn giả định",
+      "TC"
+    ],
+    "total": "Tổng"
+  },
+  "srs": {
+    "cover_title": "TÀI LIỆU ĐẶC TẢ YÊU CẦU PHẦN MỀM",
+    "cover_sub": "(Software Requirement Specification – SRS)",
+    "version": "Phiên bản ",
+    "toc": "Mục lục",
+    "lof": "Danh mục hình ảnh, bảng biểu",
+    "fig": "Hình",
+    "tbl": "Bảng",
+    "h1": "1 Giới thiệu",
+    "h1_1": "1.1 Mục đích",
+    "h1_2": "1.2 Phạm vi",
+    "h1_3": "1.3 Từ điển thuật ngữ",
+    "h1_4": "1.4 Tài liệu tham khảo",
+    "h1_5": "1.5 Tổng quát",
+    "audience": "Tài liệu dành cho Product Owner, đội phát triển, kiểm thử viên (QA), bộ phận Pháp chế và các bên liên quan. Mỗi yêu cầu được đánh mã (UC, BR, AC, TC) để trích dẫn trực tiếp trong ticket và kịch bản kiểm thử.",
+    "scope_modules": "Phạm vi tài liệu gồm %d module nghiệp vụ với %d use case: %s.",
+    "scope_item": "%d. %s (%d use case)",
+    "gloss_hdr": [
+      "Thuật ngữ",
+      "Giải thích"
+    ],
+    "gloss_title": "Từ điển thuật ngữ",
+    "gloss_rows": [
+      [
+        "Software Requirements Specification (SRS)",
+        "Đặc tả yêu cầu phần mềm"
+      ],
+      [
+        "Use case (UC)",
+        "Một chức năng hệ thống mô tả theo tác nhân, luồng sự kiện chính và luồng thay thế; mã UC-<module>.<tính năng>"
+      ],
+      [
+        "Business rule (BR)",
+        "Quy tắc nghiệp vụ, mã BR-<module>.<tính năng>.<số>"
+      ],
+      [
+        "Acceptance criteria (AC)",
+        "Tiêu chí chấp nhận dạng Given/When/Then, mã AC-<module>.<tính năng>.<số>"
+      ],
+      [
+        "Test case (TC)",
+        "Ca kiểm thử, mã TC-<module>.<tính năng>.<số>"
+      ],
+      [
+        "PO",
+        "Product Owner"
+      ]
+    ],
+    "not_used": ". Không dùng: ",
+    "legal_prefix": "Căn cứ pháp lý được viện dẫn: ",
+    "overview_intro": "Tài liệu được viết theo cấu trúc của chuẩn IEEE 830 và gồm bốn phần:",
+    "parts": [
+      "Phần 1: Giới thiệu mục đích, phạm vi, thuật ngữ và quy ước đọc tài liệu.",
+      "Phần 2: Các yêu cầu chức năng: tác nhân, danh sách chức năng, biểu đồ use case, quy trình nghiệp vụ và đặc tả chi tiết từng use case.",
+      "Phần 3: Các yêu cầu phi chức năng: giao diện người dùng, bảo mật và tuân thủ, ràng buộc.",
+      "Phần 4: Phụ lục: lỗi phát hiện khi xác minh, vấn đề mở, tích hợp và mô hình dữ liệu của từng module."
+    ],
+    "uc_explain": "Mỗi use case ở mục 2.6 gồm: bảng đặc tả chức năng (mã, tác nhân, mô tả, sự kiện kích hoạt, tiền điều kiện, luồng sự kiện chính và thay thế, hậu điều kiện), bảng dữ liệu đầu vào, và phần đặc tả bổ sung (quy tắc nghiệp vụ, công thức, vòng đời trạng thái, phân quyền, trạng thái giao diện, trường hợp biên, liên kết module, nhật ký, tiêu chí chấp nhận, ca kiểm thử, câu hỏi mở). Trong bảng dữ liệu, cột \"Ví dụ\" của mẫu được thay bằng cột \"Thông báo lỗi\"; ví dụ giá trị nằm trong phần ca kiểm thử.",
+    "label_intro": "Mỗi chi tiết mang một nhãn nguồn cho biết mức độ chắc chắn:",
+    "label_title": "Nhãn nguồn của từng chi tiết",
+    "partial_replace": [
+      "Phụ lục A/B",
+      "Phần 4 (Phụ lục)"
+    ],
+    "skip_reading_contains": [
+      "Tab"
+    ],
+    "h2": "2 Các yêu cầu chức năng",
+    "h2_1": "2.1 Các tác nhân",
+    "h2_2": "2.2 Các chức năng của hệ thống",
+    "h2_3": "2.3 Biểu đồ use case tổng quan",
+    "h2_4": "2.4 Biểu đồ use case phân rã",
+    "h2_4_n": "2.4.%d Phân rã use case \"%s\"",
+    "h2_5": "2.5 Quy trình nghiệp vụ",
+    "h2_5_n": "2.5.%d Quy trình %s",
+    "h2_6": "2.6 Đặc tả các use case",
+    "h2_6_m": "2.6.%d Module %d. %s",
+    "h2_6_f": "2.6.%d.%s %s (UC-%s)",
+    "actors_intro": "Hệ thống phục vụ các tác nhân dưới đây. Menu và màn hình hiển thị theo nhóm quyền của tài khoản; ma trận quyền chi tiết ở use case %s. \"Hệ thống\" là tác nhân nội tại thực hiện kiểm tra, lưu trữ và phản hồi; %s",
+    "actors_title": "Các tác nhân của hệ thống",
+    "funcs_intro": "Hệ thống gồm %d module nghiệp vụ. Mỗi tính năng của module là một use case, mã UC-<module>.<tính năng>.",
+    "dash_title": "0. Tổng quan (Dashboard): ",
+    "uc_list_hdr": [
+      "Mã UC",
+      "Tên use case",
+      "Màn hình",
+      "Tác nhân chính",
+      "Trạng thái trên dev"
+    ],
+    "uc_list_title": "Danh sách use case module %d. %s",
+    "diagram_intro": "Để hình dung rõ hơn về các tác nhân cũng như yêu cầu chức năng của hệ thống, các chức năng được mô hình hóa dưới dạng biểu đồ use case ở các mục sau.",
+    "ov_fig": "Biểu đồ use case tổng quan",
+    "ov_note": "Ghi chú: cạnh nối tác nhân với module lấy theo cột \"Module chính\" của bảng tác nhân (Bảng 2-1).",
+    "mod_fig": "Biểu đồ use case module %s",
+    "roles_in_module": "Vai trò và quyền trong module:",
+    "state_fig": "Biểu đồ trạng thái ",
+    "user": "Người dùng",
+    "flow_intro": "Biểu đồ dưới đây mô tả luồng sự kiện chính của use case tiêu biểu nhất của module, UC-%s %s; luồng của các use case khác nằm ở mục 2.6.%d.",
+    "act_fig": "Biểu đồ hoạt động %s",
+    "uc_intro": "Mỗi use case gồm bảng đặc tả chức năng, bảng dữ liệu đầu vào (khi màn hình có trường nhập) và phần đặc tả bổ sung. Trong cột \"Thực hiện bởi\", tác nhân được suy từ chủ ngữ của từng bước trong bản đặc tả gốc.",
+    "trigger_default": "Người dùng mở màn hình ",
+    "dialog_words": [
+      "Hộp thoại",
+      "hộp thoại"
+    ],
+    "dialog_pre": " Đang ở màn hình chứa hộp thoại: ",
+    "dialog_strip": "Hộp thoại ",
+    "r_code": "Mã Use case",
+    "r_name": "Tên Use case",
+    "r_actor": "Tác nhân",
+    "r_desc": "Mô tả",
+    "r_screen": "Màn hình",
+    "r_trigger": "Sự kiện kích hoạt",
+    "r_pre": "Tiền điều kiện",
+    "r_post": "Hậu điều kiện",
+    "r_status": "Trạng thái trên dev",
+    "r_main": "Luồng sự kiện chính (Thành công)",
+    "r_alt": "Luồng sự kiện thay thế",
+    "none": "Không có",
+    "flow_hdr": [
+      "STT",
+      "Thực hiện bởi",
+      "Hành động"
+    ],
+    "status_default": "Chưa xác minh",
+    "uc_table_title": "Đặc tả chức năng \"%s\"",
+    "input_intro": "* Dữ liệu đầu vào gồm các trường dữ liệu sau:",
+    "input_hdr": [
+      "STT",
+      "Trường dữ liệu",
+      "Mô tả",
+      "Bắt buộc?",
+      "Điều kiện hợp lệ",
+      "Thông báo lỗi"
+    ],
+    "default_word": "; mặc định: ",
+    "input_title": "Dữ liệu chức năng \"%s\"",
+    "h3": "3 Các yêu cầu phi chức năng",
+    "h3_1": "3.1 Giao diện người dùng",
+    "h3_2": "3.2 Tính bảo mật và tuân thủ",
+    "h3_3": "3.3 Ràng buộc",
+    "nav_title": "Cấu trúc điều hướng của ứng dụng",
+    "observed_conv": "Quy ước giao diện quan sát được: ",
+    "observed_conv_strip": "Quy ước chung quan sát được:",
+    "conv_intro": "Quy ước chung cho mọi màn hình (Đề xuất PO, áp dụng khi use case không ghi khác):",
+    "conv_title": "Quy ước chung cho mọi màn hình",
+    "conv_skip": "Các quy ước dưới đây",
+    "legal_title": "Nghĩa vụ pháp lý và mức đáp ứng trong sản phẩm",
+    "perm_para": "Người dùng chỉ được sử dụng chức năng và truy cập dữ liệu phù hợp với nhóm quyền của mình; ma trận quyền chi tiết ở ",
+    "components_intro": "Thành phần hệ thống và môi trường:",
+    "components_title": "Thành phần hệ thống",
+    "plans_intro": "Giới hạn theo gói dịch vụ:",
+    "plans_title": "Gói dịch vụ công bố",
+    "plans_note_prefixes": [
+      "Lưu ý"
+    ],
+    "components_note_prefixes": [],
+    "h4": "4 Phụ lục",
+    "h4_1": "4.1 Lỗi và lệch spec phát hiện khi xác minh",
+    "h4_1_title": "Lỗi và lệch spec phát hiện khi xác minh",
+    "h4_2": "4.2 Khoảng trống và điểm cần xác nhận",
+    "h4_2_title": "Khoảng trống và điểm cần xác nhận",
+    "h4_n": "4.%d Phụ lục module %s: tích hợp, dữ liệu, test case",
+    "appendix_strip": "^Phụ lục [A-E] — ",
+    "doc_title": "Tài liệu đặc tả yêu cầu phần mềm — ",
+    "lc_strip": " (dùng chung cho cả module): "
+  }
+}

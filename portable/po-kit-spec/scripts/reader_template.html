@@ -1,0 +1,83 @@
+<title>{{TITLE}}</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* layout: sticky contents rail on the left, reading column on the right; unknowns shown in an amber panel */
+:root{--bg:#f6f7f9;--panel:#fff;--fg:#1c2330;--mut:#5b6577;--line:#dfe3ea;--acc:#1d4f91;--accbg:#e6eef9;--tbd:#9a5b00;--tbdbg:#fff4de;--tbdline:#f0c987;--code:#eef1f6;
+ --sans:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--panel:#1a2029;--fg:#e6e9ef;--mut:#9aa4b5;--line:#2c3441;--acc:#8db4ee;--accbg:#1f2c40;--tbd:#f2b95c;--tbdbg:#2b2416;--tbdline:#5b4721;--code:#232b37;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161d;--panel:#1a2029;--fg:#e6e9ef;--mut:#9aa4b5;--line:#2c3441;--acc:#8db4ee;--accbg:#1f2c40;--tbd:#f2b95c;--tbdbg:#2b2416;--tbdline:#5b4721;--code:#232b37;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans);margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+.top{padding:20px 0 12px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);margin-bottom:20px}
+.top h1{margin:0;font-size:22px;font-weight:700;text-wrap:balance}
+.top p{margin:0;color:var(--mut);font-size:13px}
+.wrap{display:grid;grid-template-columns:minmax(220px,290px) minmax(0,1fr);gap:28px;align-items:start;max-width:1280px;margin:0 auto;padding-bottom:60px}
+nav{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding-right:6px}
+nav input{width:100%;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);margin-bottom:10px}
+nav input:focus-visible,a:focus-visible,summary:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.ng{margin-bottom:10px}
+nav a{display:block;color:var(--fg);text-decoration:none;font-size:13.5px;padding:4px 8px;border-radius:5px;line-height:1.4}
+nav a.nm{font-weight:600;color:var(--acc)}
+nav a.nf{color:var(--mut);padding-left:16px}
+nav a:hover,nav a.on{background:var(--accbg);color:var(--acc)}
+.tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);cursor:pointer}
+button:hover{border-color:var(--acc)}
+main{min-width:0}
+.mod h1{font-size:24px;margin:8px 0 14px;text-wrap:balance}
+.mod+.mod{margin-top:44px;padding-top:28px;border-top:2px solid var(--line)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px;scroll-margin-top:12px}
+section{min-width:0}
+h1,h2,summary,li,td,th{overflow-wrap:anywhere}
+section h2{font-size:18px;margin:0 0 8px;text-wrap:balance}
+section.feat h2{color:var(--acc)}
+code{font-family:var(--mono);font-size:12.5px;background:var(--code);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+h2 code{font-weight:400}
+details.blk{border-top:1px solid var(--line);padding:2px 0}
+details.blk>summary{cursor:pointer;font-weight:600;padding:9px 0;list-style:none;display:flex;gap:8px;align-items:center}
+details.blk>summary::before{content:"▸";color:var(--mut);transition:transform .15s}
+details.blk[open]>summary::before{transform:rotate(90deg)}
+details.blk>summary::-webkit-details-marker{display:none}
+details.tbd{background:var(--tbdbg);border:1px solid var(--tbdline);border-radius:8px;padding:2px 12px;margin-top:10px}
+details.tbd>summary{color:var(--tbd)}
+p{margin:6px 0;overflow-wrap:anywhere}
+ul,ol{padding-left:22px;margin:6px 0}
+li{margin:3px 0}
+.tw{overflow-x:auto;margin:8px 0;border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:90px}
+th{background:var(--accbg);color:var(--fg);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.hide{display:none!important}
+#empty{color:var(--mut);padding:20px 4px}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr)}nav{position:static;max-height:none}.ng .nf{display:none}.ng:hover .nf{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="top"><h1>{{TITLE}}</h1><p>{{SUB}} · {{META}}</p></div>
+<div class="wrap">
+<nav aria-label="Mục lục">
+<input id="q" type="search" placeholder="Tìm trong tài liệu" aria-label="Tìm trong tài liệu">
+<div class="tools"><button id="openall" type="button">Mở hết</button><button id="closeall" type="button">Thu gọn</button><button id="tbdonly" type="button">Chỉ xem Cần xác nhận</button></div>
+{{NAV}}
+</nav>
+<main id="main">{{BODY}}<p id="empty" class="hide">Không có mục nào khớp.</p></main>
+</div>
+<script>
+(function(){
+var q=document.getElementById('q'),secs=[].slice.call(document.querySelectorAll('section')),mods=[].slice.call(document.querySelectorAll('.mod')),links=[].slice.call(document.querySelectorAll('nav a.nf,nav a.nm'));
+function norm(s){return s.toLowerCase()}
+function apply(){var v=norm(q.value.trim()),shown=0;
+ secs.forEach(function(s){var ok=!v||s.getAttribute('data-text').indexOf(v)>-1||norm(s.firstChild.textContent).indexOf(v)>-1;s.classList.toggle('hide',!ok);if(ok)shown++;
+  if(v&&ok){s.querySelectorAll('details').forEach(function(d){d.open=true})}});
+ mods.forEach(function(m){m.classList.toggle('hide',!m.querySelector('section:not(.hide)'))});
+ links.forEach(function(a){var t=document.getElementById(a.getAttribute('href').slice(1));if(t&&t.tagName==='SECTION')a.classList.toggle('hide',t.classList.contains('hide'))});
+ document.getElementById('empty').classList.toggle('hide',shown>0)}
+q.addEventListener('input',apply);
+document.getElementById('openall').onclick=function(){document.querySelectorAll('details.blk').forEach(function(d){d.open=true})};
+document.getElementById('closeall').onclick=function(){document.querySelectorAll('details.blk').forEach(function(d){d.open=false})};
+document.getElementById('tbdonly').onclick=function(){document.querySelectorAll('details.blk').forEach(function(d){d.open=d.classList.contains('tbd')})};
+var io=('IntersectionObserver' in window)?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id)})}})},{rootMargin:'0px 0px -70% 0px'}):null;
+if(io)secs.forEach(function(s){io.observe(s)});
+})();
+</script>

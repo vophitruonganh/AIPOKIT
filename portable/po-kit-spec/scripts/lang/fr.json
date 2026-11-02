@@ -1,0 +1,266 @@
+{
+  "code": "fr",
+  "name": "Français",
+  "blocks": {
+    "problem_value": "Problème et valeur",
+    "user_stories": "User stories",
+    "main_flow": "Flux principal",
+    "alt_flow": "Flux alternatifs et exceptions",
+    "business_rules": "Règles de gestion",
+    "ui_data": "Interface et données",
+    "acceptance": "Critères d'acceptation",
+    "field_spec": "Spécification des champs",
+    "lifecycle": "Cycle de vie des états",
+    "permissions": "Permissions par action",
+    "ui_states": "États de l'interface",
+    "edge_cases": "Cas limites et gestion des erreurs",
+    "module_links": "Liens entre modules",
+    "notifications": "Notifications, journal d'audit et impression/export",
+    "test_cases": "Cas de test",
+    "open_questions": "Questions ouvertes et hypothèses",
+    "formulas": "Formules et calculs"
+  },
+  "labels": {
+    "observed": "Observé",
+    "inferred": "Déduit de l'API",
+    "proposal": "Proposition du PO",
+    "unverified": "Non vérifié",
+    "decided": "Décidé par le PO"
+  },
+  "answers": {
+    "verified": "Vérifié",
+    "partial": "Partiellement vérifié",
+    "cannot": "Impossible à vérifier",
+    "decided": "Décidé par le PO"
+  },
+  "tc_types": {
+    "main": "Principal",
+    "alt": "Alternatif",
+    "edge": "Limite",
+    "perm": "Permission"
+  },
+  "na": "Sans objet",
+  "question_col": "Question",
+  "claims_regex": "\\b(toujours|jamais|au plus \\d|au maximum \\d|jusqu'à \\d)",
+  "proposal_prefix": "Proposition : ",
+  "system_actor": "Système",
+  "system_clause_regex": "(,| puis| alors| et) [lL]e système ",
+  "lower_first": true,
+  "module_sections": {
+    "summary": "Résumé",
+    "roles": "Rôles et permissions",
+    "feature_map": "Carte des fonctionnalités",
+    "appendix": "Annexe"
+  },
+  "overview": {
+    "product": "1. Vue d'ensemble du produit",
+    "glossary": "Glossaire standard",
+    "reading": "Comment lire ce document",
+    "roles": "Rôles utilisateurs",
+    "conventions": "Conventions communes à tous les écrans",
+    "navigation": "2. Structure de navigation",
+    "modules": "3.",
+    "compliance": "4. Conformité et sécurité",
+    "bugs": "Bugs et écarts par rapport à la spécification",
+    "gaps": "5. Lacunes et points à confirmer"
+  },
+  "field_hdr": [
+    "Champ",
+    "Type",
+    "Obligatoire",
+    "Format / longueur",
+    "Valeur par défaut",
+    "Validation",
+    "Message d'erreur"
+  ],
+  "rename": {
+    "business_rules": "Règles de gestion",
+    "acceptance": "Critères d'acceptation",
+    "test_cases": "Cas de test",
+    "ui_data": "Interface et données d'écran"
+  },
+  "stats": {
+    "title": "# Couverture de vérification",
+    "legend": "« Vérifié » = essayé sur l'application réelle ; « Partiel » = un seul côté vérifié ; « Impossible à vérifier » = raison consignée ; « Hypothèse » = non essayé. TC = cas de test rédigés. « Décidé PO » = réponse du Product Owner.",
+    "hdr": [
+      "Fonctionnalité",
+      "Questions",
+      "Vérifié",
+      "Partiel",
+      "Impossible à vérifier",
+      "Décidé PO",
+      "Hypothèse",
+      "TC"
+    ],
+    "total": "Total"
+  },
+  "srs": {
+    "cover_title": "SPÉCIFICATION DES EXIGENCES LOGICIELLES",
+    "cover_sub": "(SRS)",
+    "version": "Version ",
+    "toc": "Table des matières",
+    "lof": "Liste des figures et des tableaux",
+    "fig": "Figure",
+    "tbl": "Tableau",
+    "h1": "1 Introduction",
+    "h1_1": "1.1 Objet",
+    "h1_2": "1.2 Périmètre",
+    "h1_3": "1.3 Glossaire",
+    "h1_4": "1.4 Références",
+    "h1_5": "1.5 Vue d'ensemble",
+    "audience": "Ce document s'adresse au Product Owner, à l'équipe de développement, aux testeurs (QA), aux juristes et aux autres parties prenantes. Chaque exigence porte un code (UC, BR, AC, TC) afin de pouvoir être citée directement dans les tickets et les scripts de test.",
+    "scope_modules": "Le document couvre %d modules métier et %d cas d'utilisation : %s.",
+    "scope_item": "%d. %s (%d cas d'utilisation)",
+    "gloss_hdr": [
+      "Terme",
+      "Signification"
+    ],
+    "gloss_title": "Glossaire",
+    "gloss_rows": [
+      [
+        "Spécification des exigences logicielles (SRS)",
+        "Spécification des exigences d'un logiciel"
+      ],
+      [
+        "Cas d'utilisation (UC)",
+        "Fonction du système décrite par ses acteurs, son flux d'événements principal et ses flux alternatifs ; code UC-<module>.<feature>"
+      ],
+      [
+        "Règle de gestion (BR)",
+        "Règle métier, code BR-<module>.<feature>.<numéro>"
+      ],
+      [
+        "Critères d'acceptation (AC)",
+        "Critère d'acceptation au format Étant donné / Quand / Alors, code AC-<module>.<feature>.<numéro>"
+      ],
+      [
+        "Cas de test (TC)",
+        "Un cas de test, code TC-<module>.<feature>.<numéro>"
+      ],
+      [
+        "PO",
+        "Product Owner"
+      ]
+    ],
+    "not_used": ". À ne pas utiliser : ",
+    "legal_prefix": "Bases légales citées : ",
+    "overview_intro": "Ce document suit la structure IEEE 830 et comporte quatre parties :",
+    "parts": [
+      "Partie 1 : Introduction : objet, périmètre, glossaire et conventions de lecture.",
+      "Partie 2 : Exigences fonctionnelles : acteurs, liste des fonctions, diagrammes de cas d'utilisation, processus métier et spécification détaillée de chaque cas d'utilisation.",
+      "Partie 3 : Exigences non fonctionnelles : interface utilisateur, sécurité et conformité, contraintes.",
+      "Partie 4 : Annexes : bugs relevés pendant la vérification, points ouverts, intégration et modèle de données de chaque module."
+    ],
+    "uc_explain": "Chaque cas d'utilisation de la section 2.6 comprend : un tableau de spécification de la fonction (code, acteur, description, déclencheur, préconditions, flux d'événements principal et alternatifs, postconditions), un tableau des données d'entrée et une spécification complémentaire (règles de gestion, formules, cycle de vie des états, permissions, états de l'interface, cas limites, liens entre modules, journal d'audit, critères d'acceptation, cas de test, questions ouvertes). Dans le tableau de données, la colonne « Exemple » du modèle est remplacée par une colonne « Message d'erreur » ; les exemples de valeurs figurent dans les cas de test.",
+    "label_intro": "Chaque détail porte une étiquette de source indiquant son degré de certitude :",
+    "label_title": "Étiquette de source de chaque détail",
+    "partial_replace": [
+      "Annexe A/B",
+      "Partie 4 (Annexes)"
+    ],
+    "skip_reading_contains": [
+      "Onglet"
+    ],
+    "h2": "2 Exigences fonctionnelles",
+    "h2_1": "2.1 Acteurs",
+    "h2_2": "2.2 Fonctions du système",
+    "h2_3": "2.3 Diagramme de cas d'utilisation général",
+    "h2_4": "2.4 Diagrammes de cas d'utilisation détaillés",
+    "h2_4_n": "2.4.%d Décomposition du cas d'utilisation « %s »",
+    "h2_5": "2.5 Processus métier",
+    "h2_5_n": "2.5.%d Processus %s",
+    "h2_6": "2.6 Spécifications des cas d'utilisation",
+    "h2_6_m": "2.6.%d Module %d. %s",
+    "h2_6_f": "2.6.%d.%s %s (UC-%s)",
+    "actors_intro": "Le système sert les acteurs ci-dessous. Les menus et les écrans dépendent du groupe de permissions du compte ; la matrice détaillée des permissions figure dans le cas d'utilisation %s. « Système » est l'acteur interne qui valide, enregistre et répond ; %s",
+    "actors_title": "Acteurs du système",
+    "funcs_intro": "Le système comprend %d modules métier. Chaque fonctionnalité d'un module est un cas d'utilisation, de code UC-<module>.<feature>.",
+    "dash_title": "0. Vue d'ensemble (tableau de bord) : ",
+    "uc_list_hdr": [
+      "Code UC",
+      "Nom du cas d'utilisation",
+      "Écran",
+      "Acteurs principaux",
+      "Statut de développement"
+    ],
+    "uc_list_title": "Liste des cas d'utilisation du module %d. %s",
+    "diagram_intro": "Pour mieux faire apparaître les acteurs et les exigences fonctionnelles, les fonctions sont modélisées par des diagrammes de cas d'utilisation dans les sections suivantes.",
+    "ov_fig": "Diagramme de cas d'utilisation général",
+    "ov_note": "Remarque : un lien entre un acteur et un module suit la colonne « Module principal » du tableau des acteurs (Tableau 2-1).",
+    "mod_fig": "Diagramme de cas d'utilisation du module %s",
+    "roles_in_module": "Rôles et permissions dans le module :",
+    "state_fig": "Diagramme d'états de ",
+    "user": "Utilisateur",
+    "flow_intro": "Le diagramme ci-dessous présente le flux d'événements principal du cas d'utilisation le plus représentatif du module, UC-%s %s ; les flux des autres cas d'utilisation figurent dans la section 2.6.%d.",
+    "act_fig": "Diagramme d'activité de %s",
+    "uc_intro": "Chaque cas d'utilisation comprend un tableau de spécification de la fonction, un tableau des données d'entrée (lorsque l'écran comporte des champs de saisie) et une spécification complémentaire. Dans la colonne « Réalisé par », l'acteur est déduit du sujet de chaque étape de la spécification source.",
+    "trigger_default": "L'utilisateur ouvre l'écran ",
+    "dialog_words": [
+      "Boîte de dialogue",
+      "boîte de dialogue",
+      "Dialogue",
+      "dialogue"
+    ],
+    "dialog_pre": " Actuellement sur l'écran qui contient la boîte de dialogue : ",
+    "dialog_strip": "Boîte de dialogue ",
+    "r_code": "Code du cas d'utilisation",
+    "r_name": "Nom du cas d'utilisation",
+    "r_actor": "Acteurs",
+    "r_desc": "Description",
+    "r_screen": "Écran",
+    "r_trigger": "Déclencheur",
+    "r_pre": "Préconditions",
+    "r_post": "Postconditions",
+    "r_status": "Statut de développement",
+    "r_main": "Flux d'événements principal (succès)",
+    "r_alt": "Flux d'événements alternatif",
+    "none": "Aucun",
+    "flow_hdr": [
+      "N°",
+      "Réalisé par",
+      "Action"
+    ],
+    "status_default": "Non vérifié",
+    "uc_table_title": "Spécification de la fonction « %s »",
+    "input_intro": "* Les données d'entrée comprennent les champs suivants :",
+    "input_hdr": [
+      "N°",
+      "Champ",
+      "Description",
+      "Oblig. ?",
+      "Condition de validité",
+      "Message d'erreur"
+    ],
+    "default_word": " ; valeur par défaut : ",
+    "input_title": "Données de la fonction « %s »",
+    "h3": "3 Exigences non fonctionnelles",
+    "h3_1": "3.1 Interface utilisateur",
+    "h3_2": "3.2 Sécurité et conformité",
+    "h3_3": "3.3 Contraintes",
+    "nav_title": "Structure de navigation de l'application",
+    "observed_conv": "Conventions d'interface observées : ",
+    "observed_conv_strip": "Conventions communes observées :",
+    "conv_intro": "Conventions communes à tous les écrans (proposition du PO, valables sauf indication contraire d'un cas d'utilisation) :",
+    "conv_title": "Conventions communes à tous les écrans",
+    "conv_skip": "Les conventions ci-dessous",
+    "legal_title": "Obligations légales et manière dont le produit y répond",
+    "perm_para": "Les utilisateurs ne peuvent utiliser que les fonctions et accéder qu'aux données correspondant à leur groupe de permissions ; la matrice détaillée des permissions figure dans ",
+    "components_intro": "Composants du système et environnement :",
+    "components_title": "Composants du système",
+    "plans_intro": "Limites par offre de service :",
+    "plans_title": "Offres de service publiées",
+    "plans_note_prefixes": [
+      "Remarque"
+    ],
+    "components_note_prefixes": [],
+    "h4": "4 Annexes",
+    "h4_1": "4.1 Bugs et écarts par rapport à la spécification relevés pendant la vérification",
+    "h4_1_title": "Bugs et écarts par rapport à la spécification relevés pendant la vérification",
+    "h4_2": "4.2 Lacunes et points à confirmer",
+    "h4_2_title": "Lacunes et points à confirmer",
+    "h4_n": "4.%d Annexe du module %s : intégration, données, cas de test",
+    "appendix_strip": "^Annexe [A-E] — ",
+    "doc_title": "Spécification des exigences logicielles — ",
+    "lc_strip": " (commun à l'ensemble du module) : "
+  }
+}

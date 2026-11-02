@@ -1,0 +1,20 @@
+# Python / tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+
+# Never commit specs, exports or recon data of real products
+/specs/
+*.docx
+*.pdf
+*.xlsx
+inventory.md
+inventory.new.md
+brief.md
+pages.json
+*.docx.meta.json
+srs_img/
+versions/
+.po-kit/

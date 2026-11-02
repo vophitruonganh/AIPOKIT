@@ -1,0 +1,73 @@
+# 2. Reports
+
+## Summary
+
+The Reports module shows users how they spend.
+
+## Roles & permissions
+
+| Role | Can do | Cannot do |
+| --- | --- | --- |
+| User | Record and view expenses | See other people's data |
+
+## Feature map
+
+| # | Feature | Screen | Main role | Status on dev |
+| --- | --- | --- | --- | --- |
+| 2.1 | Monthly report | /m2/f1 | User | Works |
+
+## 2.1 Monthly report `/m2/f1`
+
+**Problem & value** — Users need to record an expense quickly to follow their budget.
+
+**User stories**
+
+- As a user, I want to record an expense in 10 seconds so that I do not forget it.
+
+**Main flow**
+
+1. User opens the screen. System shows the list.
+2. User presses Add and enters the amount. System checks that the amount is greater than 0.
+3. User presses Save. System saves and shows a message.
+
+**Alternate flows & exceptions**
+
+- When the amount is 0 → System shows "Amount must be greater than 0" and does not save.
+
+**Business rules**
+
+- BR-2.1.1 The amount is greater than 0.
+
+**UI & data**
+
+| Field | Type | Required |
+| --- | --- | --- |
+| Amount | number | yes |
+
+**Acceptance criteria**
+
+- AC-2.1.1 Given amount 0, When Save is pressed, Then an error is shown.
+
+**Field specification**
+
+| Field | Type | Required | Format / length | Default | Validation | Error message |
+| --- | --- | --- | --- | --- | --- | --- |
+| Amount | number | Yes | at most 12 digits | — | greater than 0 | Observed: "Amount must be greater than 0" |
+
+**Test cases**
+
+| Code | Precondition | Steps | Expected result | Type |
+| --- | --- | --- | --- | --- |
+| TC-2.1.1 | Logged in | Enter 50,000, Save | Expense appears | Main |
+| TC-2.1.2 | Logged in | Enter 0, Save | Error shown | Edge |
+| TC-2.1.3 | Guest | Open screen | Redirect to login | Permission |
+
+**Open questions & assumptions**
+
+| Question | Current assumption | Who answers | Priority |
+| --- | --- | --- | --- |
+| Is there a daily limit on expenses? | Verified 29/10/2026: no limit | QA | Low |
+
+## Appendix A — Integration & API
+
+GET /api/expenses.

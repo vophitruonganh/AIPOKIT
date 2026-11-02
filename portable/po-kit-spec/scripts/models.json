@@ -1,0 +1,80 @@
+{
+  "_comment": "Tiers are stable; model names are not. Edit the values for your tool. 'inherit' = use the model of the running session. A team copy in .po-kit/models.json overrides this file.",
+  "tiers": [
+    "light",
+    "standard",
+    "deep"
+  ],
+  "efforts": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "tools": {
+    "claude-code": {
+      "supports_effort": true,
+      "light": "haiku",
+      "standard": "sonnet",
+      "deep": "opus"
+    },
+    "codex": {
+      "supports_effort": true,
+      "light": "inherit",
+      "standard": "inherit",
+      "deep": "inherit"
+    },
+    "chatgpt": {
+      "supports_effort": false,
+      "light": "inherit",
+      "standard": "inherit",
+      "deep": "inherit"
+    },
+    "default": {
+      "supports_effort": false,
+      "light": "inherit",
+      "standard": "inherit",
+      "deep": "inherit"
+    }
+  },
+  "task_base": {
+    "recon": 25,
+    "write": 35,
+    "deepen": 45,
+    "review": 40,
+    "verify": 30,
+    "export": 5,
+    "translate": 10
+  },
+  "weights": {
+    "screens": 1.5,
+    "fields": 0.15,
+    "roles": 4,
+    "states": 0.8,
+    "api": 0.3,
+    "rules": 0.4,
+    "defects_prev": 0.8
+  },
+  "caps": {
+    "screens": 8,
+    "fields": 40,
+    "roles": 4,
+    "states": 15,
+    "api": 20,
+    "rules": 30,
+    "defects_prev": 15
+  },
+  "flags": {
+    "has_writes": 8,
+    "no_test_data": -5,
+    "money_or_legal": 12,
+    "independent_review": 10
+  },
+  "tier_cuts": {
+    "standard": 30,
+    "deep": 70
+  },
+  "effort_cuts": {
+    "medium": 25,
+    "high": 60
+  }
+}

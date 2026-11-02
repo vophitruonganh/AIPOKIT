@@ -1,0 +1,22 @@
+---
+name: reverse-spec-builder
+description: Build a verified product spec (features, rules, acceptance criteria, test cases) from any running website, web app or mobile app and export it as an SRS in the chosen language or template. Use when asked to document, spec or reverse-engineer an existing product.
+---
+
+# Reverse-spec builder
+Turn any running product (website, web app, mobile app) into a spec where every detail is labelled by how sure we are, then export it. Nothing here is specific to one product: work from visible labels, roles and routes, never from one site's framework or wording. Six phases (0-5) plus an optional extension, the PO loop (6), used only when it is worth it, one approval gate before touching the app, role checkpoints where the user signs in, and script gates that need no one. Scripts: `${CLAUDE_PLUGIN_ROOT}/scripts/` (if the variable is not expanded, locate it with `find ~/.claude/plugins -name build_srs.py`) and pass that absolute path to agents in their brief. References (read only the one you need): `references/`. Follow `references/token-rules.md` throughout.
+
+## Standards and language
+- Talk to the user in the user's own language, whatever the spec or document language.
+- If `.po-kit/standards.md` exists, follow it over these defaults (it may add to the safety rules, never weaken them). If not, offer `/po-kit-spec:setup-standards` once; defaults work.
+- Ask the user for two languages and store them in standards/config: **spec language** (the text of the spec) and **document language** (`lang` of the exported SRS: `en`, `vi`, or one added with `/po-kit-spec:add-language`). Default both to the user's language. Headings and labels stay canonical English in the spec; the export localizes them.
+
+## Phases
+0. **Prep** (`references/session-rules.md`): access preflight and driver choice (`references/drivers.md`) run first, without asking. Then ONE message asks for what is missing: target(s), environment (default production), roles to cover (no credentials: the user signs in), forbidden-action list from `references/safety-rules.md`, spec and document language, storage. Write `brief.md`. GATE 0 (the only approval gate): the user approves the forbidden list; "ok" accepts the defaults.
+1. **Recon** (`spec-recon`, one role at a time): walk EVERY feature down to sub-features per `references/coverage-rules.md` with the chosen driver, plus sitemap, API (web only), enums, roles, glossary. Output `inventory.md`. Role checkpoint between roles. Update run (a previous `inventory.md` exists): merge with `scripts/inventory_diff.py` so ids and feature numbers never change; only features it lists go to Phase 2. Script gate: `inventory_check.py` passes. Post the feature list to the user for information and continue; adjust later if they object.
+2. **Write** (`spec-writer`, one per module, parallel): 16-block template (+ optional Formulas) (`references/feature-block-standard.md`), source labels, BR/AC/TC numbers. Every inventory row is described with its exact label. Script gate: `spec_lint.py` and `inventory_check.py --md` have no FAIL (unanswered questions are expected until Phase 4).
+3. **Deepen** (only for features under the bar in `playbook.md`, counted from the md files with grep, not by reading): rewrite those features; optional `spec-reviewer` for modules flagged `money_or_legal`.
+4. **Verify** (`spec-verifier`, one per module, grouped by role): answer every open question `Verified / Partly verified / Cannot verify`, retry `Needs data` / `Needs role` rows. Script gate: no unanswered question, `inventory_check.py --md` passes. Items left `Cannot verify` and `PO proposal` are not reviewed here: the exported document lists them as "To confirm", and the optional PO loop can close them.
+5. **Export**: `references/export.md`; customer template via `/po-kit-spec:export-custom`.
+6. **PO loop (optional extension)**: decide with `references/po-loop-decision.md` after Phase 5; ask the user once with a recommendation; skip unless they want it. When used (repeat until signed off): `/po-kit-spec:po-sheet` exports open questions and proposed rules to Excel; the PO decides Accept / Change / Reject / Check on app; `/po-kit-spec:po-import` loads it (snapshot, `PO decided <date>` label, version bump, change list), a `spec-writer` aligns feature text from `po-apply.md`, `po-verify.md` goes to Phase 4, then export again. Never reopen a decided point; ids (INV, N.M, TBD, BR, BUG) stay stable across versions.
+Details and pitfalls: `references/playbook.md`.
