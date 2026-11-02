@@ -87,6 +87,6 @@ for mid, t, ch in nav:
 ptitle = CFG.get('product', 'SRS')
 PAGE = open(os.path.join(HERE, 'reader_template.html'), encoding='utf-8').read()
 PAGE = PAGE.replace('{{TITLE}}', esc(ptitle)).replace('{{SUB}}', esc(CFG.get('cover_lines', [''])[0])) \
-           .replace('{{NAV}}', navh).replace('{{BODY}}', ''.join(body)).replace('{{META}}', esc(CFG.get('source_detail', '')))
+           .replace('{{NAV}}', navh).replace('{{BODY}}', ''.join(body)).replace('{{META}}', esc(CFG.get('version', '') and 'v' + CFG['version']))
 open(OUT, 'w', encoding='utf-8').write(PAGE)
 print('wrote', OUT, len(PAGE) // 1024, 'KB', stats)

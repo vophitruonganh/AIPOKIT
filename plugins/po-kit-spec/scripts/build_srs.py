@@ -548,14 +548,12 @@ else:
 para('', space_after=30)
 if CLASSIC:
     para(S('version') + CFG['version'], align=COV, bold=True, size=16, space_after=30)
-    para(CFG['source_line'], align=COV, bold=True, size=16, space_after=4)
-    para(CFG['source_detail'], align=COV, bold=True, size=16, space_after=30)
+    # no source / environment / account lines on the cover: the SRS describes the product, not how it was surveyed
     para(CFG['date_line'], align=COV, bold=True, size=16, space_after=150)
     if CFG.get('cover_footer'): para(CFG['cover_footer'], align=WD_ALIGN_PARAGRAPH.CENTER, bold=True, italic=True, size=12)
 else:
     para(S('version') + CFG['version'], align=COV, bold=True, size=14, space_after=30)
-    para(CFG['source_line'], align=COV, bold=True, size=13, space_after=4)
-    para(CFG['source_detail'], align=COV, size=12, space_after=40)
+    # no source / environment / account lines on the cover: the SRS describes the product, not how it was surveyed
     para(CFG['date_line'], align=COV, bold=True, size=14)
 if CFG.get('revisions') and not CLASSIC:   # change history: [[version, date, change], ...]
     _RH = {'vi': ('Lịch sử thay đổi', ['Phiên bản', 'Ngày', 'Nội dung thay đổi']), 'fr': ('Historique', ['Version', 'Date', 'Modification'])}.get(

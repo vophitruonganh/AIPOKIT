@@ -6,8 +6,9 @@ Module file `N-name.md`:
 ## Roles & permissions           (table: Role | Can do | Cannot do)
 ## Feature map                   (table: # | Feature | Screen | Main role | Status on dev)
 ## N.M Feature name `route`      (one per feature, all blocks)
-## Appendix A — Integration & API   (B data model, C environment, D not visible)
+## Appendix A — Integration & API   (B data model, C not visible)
 ```
+No environment, host, account or survey notes anywhere in the spec (no "C. Environment" appendix, no `host …, observed <date>` on endpoint headings); endpoints are written as paths. Keep the per-item source labels.
 `N.M` in the map equals the `## N.M` heading. "Main role" is comma-separated and must be in config `actors`. Main-flow steps start with an actor. Alternate flow lines: `When <condition> → <behaviour>`.
 
 Overview file `0-*.md`, sections found by name (override in config `sections`); a missing one leaves that SRS part empty:

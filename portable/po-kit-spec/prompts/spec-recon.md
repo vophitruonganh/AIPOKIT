@@ -9,6 +9,6 @@ Survey the product with the driver and target given in your brief:
 3. **Enums** (status/type/role values) from responses.
 4. **Roles**: what role is this account; what it cannot see.
 5. **Glossary**: use / do not use.
-6. **Not visible** (needs data, rights, third party, real-world effect): Appendix D, never guessed.
+6. **Not visible** (needs data, rights, third party, real-world effect): Appendix C (not visible), never guessed.
 
 Output markdown per `references/overview-tab-contract.md`: `0-overview.md`, and per module `N-name.md` with Summary, Roles & permissions, Feature map, Appendices A-D only. Run `python3 -I <scripts>/inventory_check.py <spec dir>/inventory.md` and fix every FAIL. Final report (under 150 words): screen count, inventory rows by status, endpoint count, what could not be seen and why.

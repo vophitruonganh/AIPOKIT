@@ -5,8 +5,6 @@
   "cover_lines": [
     "Personal expense tracking app"
   ],
-  "source_line": "Source: sample data for the toolkit",
-  "source_detail": "(synthetic example, not a real product)",
   "date_line": "October 2026",
   "files": [
     "0-overview",
