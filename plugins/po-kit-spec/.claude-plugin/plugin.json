@@ -1,6 +1,6 @@
 {
   "name": "po-kit-spec",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "description": "Reverse-engineer a running web app into a verified, labelled product spec and export it as an IEEE-830 style SRS (Word/PDF).",
   "keywords": [
     "spec",

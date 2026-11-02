@@ -5,6 +5,7 @@
 4. Two passes (set `lang` in config):
 ```
 S=${CLAUDE_PLUGIN_ROOT}/scripts
+python3 -I $S/diagram_check.py <md_dir> config.json                    # gate: no FAIL (v1.5 diagrams)
 python3 -I $S/build_srs.py <md_dir> out.docx pages.json config.json    # pass 1 (pages.json may not exist)
 soffice --headless --convert-to pdf out.docx
 python3 -I $S/pages.py out.pdf out.docx.meta.json pages.json
@@ -15,3 +16,7 @@ soffice --headless --convert-to pdf out.docx
 6. Deliver PDF, Word, coverage table, list of leftover test records.
 Web reader: `/po-kit-spec:export-reader <md_dir>` (same PO view, one HTML page). How unknowns are shown: `references/po-view.md`.
 Short classic SRS (no appendices, open questions or bug ids): add `"template": "classic"` to a copy of config.json and run the same two passes. Other templates: `/po-kit-spec:export-custom`. Other languages: `/po-kit-spec:add-language`.
+
+
+## Diagrams (v1.5)
+The figures are chosen from the content by `diagram_plan.py` (see `references/diagrams.md`). Pick the set with `config.json` → `"diagrams": {"profile": "full" | "classic" | "po" | "dev", "include": [], "exclude": []}`; default `full` (`classic` for the classic template). Each figure is saved as PNG (Word) and SVG next to it in `srs_img/`.

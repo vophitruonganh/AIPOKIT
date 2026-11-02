@@ -1,4 +1,4 @@
-# po-kit-spec (Claude Code plugin, part of AIPOKIT) v1.4.4
+# po-kit-spec (Claude Code plugin, part of AIPOKIT) v1.5.0
 Reverse-engineer any running website, web app or mobile app into a verified, labelled product spec, then export it as an IEEE-830 style SRS (Word/PDF) in the language or template you choose. Nothing in the plugin is tied to one product: it works from visible labels, roles and routes.
 
 ## Install
@@ -18,8 +18,9 @@ Open a new session afterwards to see the `/po-kit-spec:*` commands.
 2. **One message of questions**: target, what the spec is for, environment (production / staging / dev), roles to cover, forbidden actions, languages, storage. You approve the forbidden list: the only approval gate.
 3. **You sign in** for each role when asked (Claude never types passwords; a separate browser profile per role avoids signing out). Recon walks every feature into `inventory.md`.
 4. Write, deepen (only weak features), verify: gated by scripts (`inventory_check.py`, `spec_lint.py`), no further questions.
-5. **Export** the SRS (full PO view, or `"template": "classic"`), web reader, or your own template.
-6. **Optional PO loop**: offered once, only when the spec is a basis for building or testing and High-priority decisions are pending.
+5. **Diagrams by content** (v1.5): `diagram_plan.py` decides which diagrams this product needs (context, process, link map, activity with branches, state, sequence, screen flow, ERD, decision table, timeline, screen map, permission matrix); `spec-diagrammer` writes the ones that need understanding; `diagram_check.py` gates it.
+6. **Export** the SRS (full PO view, or `"template": "classic"`), web reader, or your own template.
+7. **Optional PO loop**: offered once, only when the spec is a basis for building or testing and High-priority decisions are pending.
 
 ## Commands
 | Command | Does |
@@ -50,7 +51,7 @@ Everything the model reads is English. The spec uses canonical English headings 
 Python 3 (python-docx, pymupdf, Pillow, openpyxl), Graphviz, LibreOffice, Liberation fonts. Check with `bash scripts/check_env.sh` (lists everything missing), install with `/po-kit-spec:setup` or `bash scripts/setup.sh` (apt on Linux, Homebrew on macOS; Python modules always go to a private venv `~/.po-kit/venv`, which the scripts switch to by themselves). Cloud sessions already have them.
 
 ## Folder map
-`commands/` slash commands · `agents/` recon, writer, verifier, reviewer · `skills/reverse-spec-builder/` skill + `references/` (session-rules, drivers, coverage-rules, safety-rules, po-loop-decision, export, ... loaded on demand) · `scripts/` lint, stats, inventory check/diff, android sweep, SRS builder, PO sheet, language packs · `examples/` synthetic sample spec.
+`commands/` slash commands · `agents/` recon, writer, verifier, reviewer, diagrammer · `skills/reverse-spec-builder/` skill + `references/` (session-rules, drivers, coverage-rules, safety-rules, po-loop-decision, export, ... loaded on demand) · `scripts/` lint, stats, inventory check/diff, android sweep, SRS builder, diagram planner/check, PO sheet, language packs · `examples/` synthetic sample spec.
 
 ## Limits
 Tested end to end on real web apps (Vietnamese) and one synthetic English spec. The `android` and `capture` drivers are documented but not yet run on a real app. Actor detection in the SRS builder is heuristic (sentence starts with the actor name); languages without capital letters get coarser results.

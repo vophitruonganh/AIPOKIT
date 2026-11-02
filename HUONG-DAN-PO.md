@@ -119,3 +119,11 @@ Mã TBD, BR và BUG giữ ổn định giữa các phiên bản để ticket kh�
   - Spec làm căn cứ để xây, sửa hoặc test và còn điểm ưu tiên cao: khuyên dùng, và chỉ đưa các điểm ưu tiên cao.
 - Không trả lời hoặc trả lời "không" thì bỏ qua, và agent không hỏi lại cho phiên bản đó. Bạn vẫn có thể gọi `/po-kit-spec:po-sheet` bất cứ lúc nào.
 - Quy tắc chi tiết nằm ở `references/po-loop-decision.md`.
+
+
+## Cập nhật v1.5: biểu đồ chọn theo nội dung
+- Không còn vẽ cùng một bộ hình cho mọi sản phẩm. Trước khi xuất, `diagram_plan.py` đọc spec và chấm điểm từng loại biểu đồ: Bắt buộc, Nên có, Có thể.
+- Có 14 loại: ngữ cảnh, use case tổng quan và theo module, quy trình nghiệp vụ, sơ đồ liên kết module, hoạt động có nhánh, trạng thái, tuần tự, luồng màn hình, ERD, bảng quyết định, mốc thời gian, sơ đồ màn hình, ma trận phân quyền.
+- SRS có thêm mục 3.4 Yêu cầu dữ liệu (ERD), sơ đồ màn hình ở 3.1 và ma trận phân quyền ở 3.2. Mục 2.5 không vẽ trùng hình đã có ở 2.6.
+- Chọn bộ hình trong `config.json`: `"diagrams": {"profile": "full"}` (mặc định), `"classic"`, `"po"` (cho người đọc nghiệp vụ) hoặc `"dev"`.
+- Agent `spec-diagrammer` chỉ vẽ từ những gì spec đã ghi; thiếu thông tin thì thêm câu hỏi mở, không tự bịa.

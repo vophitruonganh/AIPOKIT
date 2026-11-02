@@ -8,7 +8,7 @@
       "name": "po-kit-spec",
       "source": "./plugins/po-kit-spec",
       "description": "Build a verified product spec and IEEE-830 SRS from any running website, web app or mobile app.",
-      "version": "1.4.4",
+      "version": "1.5.0",
       "author": {
         "name": "Product team"
       }

@@ -5,7 +5,7 @@ Usage: build_srs.py <md_dir> <out.docx> [pages.json] [config.json]
 import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import pokit_env; pokit_env.ensure()
-import re, sys, os, json, subprocess, copy
+import re, sys, os, json, subprocess, copy, collections
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT, WD_TAB_LEADER, WD_BREAK
@@ -41,6 +41,10 @@ def parse_blocks(text):
     while i < len(lines):
         l = lines[i]
         if not l.strip(): i += 1; continue
+        if l.startswith('```'):   # fenced block (```diagram ...): kept whole, rendered as a figure
+            info = l[3:].strip(); body = []; i += 1
+            while i < len(lines) and not lines[i].startswith('```'): body.append(lines[i]); i += 1
+            out.append(('code', info, '\n'.join(body))); i += 1; continue
         m = re.match(r'^(#{1,6}) (.*)', l)
         if m: out.append(('h', len(m.group(1)), m.group(2).strip())); i += 1; continue
         if l.startswith('|'):
@@ -71,7 +75,7 @@ def parse_blocks(text):
         if m and (m.group(2) is None or l.startswith('**' + m.group(1) + '** —')):
             out.append(('label', m.group(1).strip(), (m.group(2) or '').strip())); i += 1; continue
         para = [l]; i += 1
-        while i < len(lines) and lines[i].strip() and not re.match(r'^(#|\||\s*[-*] |\s*\d+\. )', lines[i]):
+        while i < len(lines) and lines[i].strip() and not re.match(r'^(#|\||\s*[-*] |\s*\d+\. |```)', lines[i]):
             para.append(lines[i]); i += 1
         out.append(('p', ' '.join(para)))
     return out
@@ -239,6 +243,7 @@ def auto_widths(rows, total=TEXT_W):
 
 def render_blocks(blocks, chap=None, cap_tables=False, cap_prefix=''):
     for b in blocks:
+        if b[0] == 'code': continue   # diagram blocks are drawn by the diagram planner
         if b[0] == 'p': para(b[1])
         elif b[0] == 'label':
             p = para(b[1] + ('. ' if b[2] else ''), bold=True, italic=True, space_after=4)
@@ -400,78 +405,28 @@ def bkey(label):
         if label in L.aliases('blocks', k): return k
     return label
 
-# ---------------------------------------------------------------- diagrams
-def dot_render(src_dot, name):
-    p = os.path.join(IMG, name)
-    open(p + '.dot', 'w').write(src_dot)
-    subprocess.run(['dot', '-Tpng', '-Gdpi=170', '-o', p + '.png', p + '.dot'], check=True)
-    return p + '.png'
+# ---------------------------------------------------------------- diagrams (scripts/diagrams.py)
+import diagrams as D
+DSPEC = D.load_spec(MD, FILES)
+PLAN = D.plan(DSPEC, CFG)
+def want(t, scope='doc'): return D.wanted(PLAN, t, scope)
+def dot_render(src_dot, name): return D.render(src_dot, IMG, name)
+esc = D.esc
+def wrap(s, n=22): return D.wl(s, n)
 
-def esc(s): return s.replace('"', '\\"')
-def wrap(s, n=22):
-    words = s.split(); lines = []; cur = ''
-    for w in words:
-        if len(cur) + len(w) + 1 > n and cur: lines.append(cur); cur = w
-        else: cur = (cur + ' ' + w).strip()
-    if cur: lines.append(cur)
-    return '\\n'.join(esc(x) for x in lines)
-
-ACTOR_IMG = os.path.join(HERE, 'actor.png')
 def uc_diagram(name, actors, ucs, edges, title):
-    s = ['digraph G {', 'rankdir=LR; nodesep=0.25; ranksep=1.1; splines=true; newrank=true;',
-         'node [fontname="Liberation Sans", fontsize=11]; edge [arrowhead=none, color="#333333"];']
-    left = actors[:(len(actors) + 1) // 2]; right = actors[(len(actors) + 1) // 2:]
-    for i, a in enumerate(actors):
-        s.append('a%d [shape=none, image="%s", label="%s", labelloc=b, height=1.6, width=1.4, imagescale=true, fixedsize=true];' % (i, ACTOR_IMG, wrap(a, 16)))
-    s.append('subgraph cluster_sys { label="%s"; fontname="Liberation Sans"; fontsize=12; color="#555555"; style=solid;' % esc(title))
-    for j, u in enumerate(ucs):
-        s.append('u%d [shape=ellipse, style=filled, fillcolor="#FFFFCC", color="#8a7a2a", label="%s", width=2.2];' % (j, wrap(u, 24)))
-    s.append('}')
-    for (i, j) in edges:
-        if actors[i] in left: s.append('a%d -> u%d;' % (i, j))
-        else: s.append('u%d -> a%d;' % (j, i))
-    s.append('{rank=same; %s}' % ' '.join('a%d' % actors.index(a) for a in left))
-    if right: s.append('{rank=same; %s}' % ' '.join('a%d' % actors.index(a) for a in right))
-    s.append('}')
-    return dot_render('\n'.join(s), name)
+    return dot_render(D.uc_dot(actors, ucs, edges, title), name)
 
-def activity_diagram(name, rows, lanes_order):
-    lanes = []
-    for a, _ in rows:
-        if a not in lanes: lanes.append(a)
-    s = ['digraph G {', 'rankdir=TB; nodesep=0.3; ranksep=0.32; newrank=true; compound=true;',
-         'node [fontname="Liberation Sans", fontsize=10, shape=box, style="rounded,filled", fillcolor="#FFFFCC", color="#8a7a2a"]; edge [color="#333333", arrowsize=0.7];',
-         'start [shape=circle, label="", width=0.22, style=filled, fillcolor=black];',
-         'end [shape=doublecircle, label="", width=0.16, style=filled, fillcolor=black];']
-    for li, lane in enumerate(lanes):
-        s.append('subgraph cluster_%d { label="%s"; fontname="Liberation Sans"; fontsize=11; style="filled"; fillcolor="%s"; color="#777777";' % (li, esc(lane), ['#F4F4F4', '#EAF4FB', '#FBF3EA', '#EEF8EE'][li % 4]))
-        for k, (a, t) in enumerate(rows):
-            if a == lane:
-                s.append('n%d [label="%s", width=2.6];' % (k, wrap(plain(t).split('\n')[0][:150], 34)))
-        if li == 0: s.append('start;')
-        s.append('}')
-    s.append('start -> n0;')
-    for k in range(len(rows) - 1): s.append('n%d -> n%d;' % (k, k + 1))
-    s.append('n%d -> end;' % (len(rows) - 1))
-    s.append('}')
-    return dot_render('\n'.join(s), name)
+def activity_diagram(name, rows, lanes_order, alts=()):
+    rws = [(a, D.clean(plain(t).split('\n')[0], 110), bool(D.UNVERIFIED.search(t))) for a, t in rows]
+    return dot_render(D.activity_dot(rws, alts), name)
 
 def state_diagram(name, lc):
-    """lc: {states: {id: label}, edges: [[from,to,label,dashed?]], start: [ids], end: [ids]}"""
-    g = ['digraph G { rankdir=TB; nodesep=0.5; ranksep=0.4;',
-         'node [fontname="Liberation Sans", fontsize=10.5, shape=box, style="rounded,filled", fillcolor="#FFFFCC", color="#8a7a2a"];',
-         'edge [fontname="Liberation Sans", fontsize=9, color="#333333", arrowsize=0.7];',
-         'start [shape=circle, label="", width=0.2, style=filled, fillcolor=black];',
-         'end [shape=doublecircle, label="", width=0.15, style=filled, fillcolor=black];']
-    for sid, lab in lc['states'].items():
-        extra = ', fillcolor="#F6D5D5"' if sid in lc.get('bad', []) else ''
-        g.append('%s [label="%s"%s];' % (sid, esc(lab).replace('\\n', '\\n'), extra))
-    for e in lc['edges']:
-        a_, b_ = ('start' if e[0] == 'start' else e[0]), e[1]
-        g.append('%s -> %s [label="%s"%s];' % (a_, b_, esc(e[2]) if len(e) > 2 else '', ', style=dashed' if len(e) > 3 and e[3] else ''))
-    for sid in lc.get('end', []): g.append('%s -> end;' % sid)
-    g.append('}')
-    return dot_render('\n'.join(g), name)
+    """config lifecycle: {states: {id: label}, edges: [[from,to,label,dashed?]], end: [ids]}"""
+    lab = lc['states']
+    rows = [('' if e[0] == 'start' else lab.get(e[0], e[0]), lab.get(e[1], e[1]), e[2] if len(e) > 2 else '', bool(len(e) > 3 and e[3])) for e in lc['edges']]
+    rows += [(lab.get(x, x), '[*]', '', False) for x in lc.get('end', [])]
+    return dot_render(D.state_dot(rows), name)
 
 def figure(path, chap, title, width=15.5):
     p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -607,6 +562,11 @@ for b in ([] if CLASSIC else OVK('reading')):
         for it, _ in b[1]:
             if any(w in it for w in SR['skip_reading_contains']): continue
             bullet(it.replace(*SR['partial_replace']))
+if want('context'):
+    _ctxb = next((b for b in D.all_diagram_blocks(DSPEC) if b['type'] == 'context'), None)
+    _systems = D.parse_context(_ctxb['body']) if _ctxb else D.external_systems(CFG)
+    para(S('ctx_intro', PRODUCT))
+    figure(dot_render(D.context_dot(PRODUCT, D.human_actors(CFG), _systems), 'context'), 1, S('ctx_fig', PRODUCT), width=15)
 page_break()
 
 # ================================================================= 2 FUNCTIONAL REQUIREMENTS
@@ -715,6 +675,28 @@ def flow_rows_of(f, primary):
                 if b[0] == 'ol': return main_rows(b[1], primary)
     return []
 
+_procs = [b for b in D.all_diagram_blocks(DSPEC) if b['type'] == 'process']
+for b in _procs:
+    _off += 1
+    heading(S('h2_5_n', _off, lc_first(b['title'] or PRODUCT)), 3)
+    rows, alts = D.parse_flow(b['body'])
+    if rows:
+        para(S('process_intro'))
+        figure(dot_render(D.activity_dot(rows, alts), 'proc_%d' % _off), 2, S('proc_fig', lc_first(b['title'] or PRODUCT)), width=15.5)
+if want('linkmap'):
+    _ids = {f['id']: f for mm in DSPEC['modules'] for f in mm['features']}
+    _edges = []
+    for mm in DSPEC['modules']:
+        for f in mm['features']:
+            for x in D.feature_signals(f, mm, [])['links']:
+                if x in _ids and x.split('.')[0] != f['id'].split('.')[0] and (f['id'], x) not in _edges: _edges.append((f['id'], x))
+    _used = {x for e in _edges for x in e}
+    if _edges:
+        _off += 1
+        heading(S('h2_5_x', _off, S('linkmap_title')), 3)
+        para(S('linkmap_intro'))
+        _mods = [(mm['num'], mm['name'], [(f['id'], f['name']) for f in mm['features'] if f['id'] in _used]) for mm in DSPEC['modules']]
+        figure(dot_render(D.linkmap_dot([x for x in _mods if x[2]], _edges), 'linkmap'), 2, S('linkmap_fig'), width=15.5)
 for k, m in enumerate(modules):
     heading(S('h2_5_n', k + 1 + _off, lc_first(m['name'])), 3)
     summ = next((b[1] for b in m.get('summary', []) if b[0] == 'p'), '')
@@ -730,10 +712,11 @@ for k, m in enumerate(modules):
         if best is None or len(rws) > len(best[1]): best = (f, rws)
     if best and best[1]:
         f, rws = best
-        rws = rws[:14]
-        para(S('flow_intro', f['id'], f['name'], k + 1))
-        png = activity_diagram('act_m%d' % m['num'], rws, None)
-        figure(png, 2, S('act_fig', lc_first(f['name'])), width=15.5)
+        if want('activity', 'feature:' + f['id']):   # drawn with its branches in 2.6: no duplicate here
+            para(S('flow_ref', f['name'], ('UC-' + f['id']) if not CLASSIC else 'UC%03d' % UCSEQ[f['id']]))
+        else:
+            para(S('flow_intro', f['id'], f['name'], k + 1))
+            figure(activity_diagram('act_m%d' % m['num'], rws[:14], None), 2, S('act_fig', lc_first(f['name'])), width=15.5)
 
 # ================================================================= 2.6 USE CASE SPECS
 heading(S('h2_6'), 2)
@@ -812,6 +795,57 @@ def uc_table(m, f):
     caption(SR['tbl'], 2, S('uc_table_title', f['name']))
     return g
 
+DFEAT = {f['id']: f for mm in DSPEC['modules'] for f in mm['features']}
+STATE_SEEN = {}
+def _alt_attach(rows, cond):
+    words = set(re.findall(r'\w{3,}', cond.lower())); best, bi = 0, len(rows) - 1
+    for i, (_, t) in enumerate(rows):
+        n = len(words & set(re.findall(r'\w{3,}', t.lower())))
+        if n > best: best, bi = n, i
+    return bi
+def feature_diagrams(m, f):
+    """figures planned for one use case: activity with branches, state, sequence, wizard flow, decision table, timeline"""
+    sc = 'feature:' + f['id']; df = DFEAT.get(f['id'], {'diagrams': [], 'blocks': {}})
+    tag = f['id'].replace('.', '_')
+    if want('activity', sc):
+        prim = (m['map'].get(f['id'], {}).get('roles') or [USER])[0]
+        rows = flow_rows_of(f, prim)[:15]
+        alts = []
+        gd = {bkey(lab): bl for lab, _, bl in group(f['blocks'])}
+        for b in gd.get('alt_flow', []):
+            if b[0] in ('ul', 'ol'):
+                for a_, txt in alt_rows(b[1])[:6]:
+                    first = plain(txt).split('\n')[0]
+                    cond, _, res = first.partition(': ')
+                    alts.append((_alt_attach(rows, cond), D.clean(cond, 60), a_, D.clean(res or cond, 80)))
+        if rows:
+            figure(activity_diagram('act_' + tag, rows, None, alts), 2, S('act_uc_fig', f['name']), width=15.5)
+    for b in df['diagrams']:
+        if b['type'] == 'state':
+            figure(dot_render(D.state_dot(D.parse_state(b['body'])), 'st_%s_%d' % (tag, df['diagrams'].index(b))), 2, S('st_uc_fig', b['title'] or f['name']), width=12)
+    if want('state', sc) and not any(b['type'] == 'state' for b in df['diagrams']):
+        rows = D.lifecycle_rows(df)
+        key = D._state_key(df)
+        if key in STATE_SEEN:
+            para(S('st_same', STATE_SEEN[key]), italic=True)
+        elif rows:
+            STATE_SEEN[key] = 'UC-' + f['id'] if not CLASSIC else f['name']
+            figure(dot_render(D.state_dot(rows), 'st_' + tag), 2, S('st_uc_fig', f['name']), width=12)
+    for k, b in enumerate(df['diagrams']):
+        t = b['type']
+        if t == 'sequence':
+            parts, msgs = D.parse_sequence(b['body'])
+            if msgs: figure(dot_render(D.sequence_dot(parts, msgs), 'seq_%s_%d' % (tag, k)), 2, S('seq_fig', b['title'] or f['name']), width=15.5)
+        elif t == 'flow':
+            rows, alts = D.parse_flow(b['body'])
+            if rows: figure(dot_render(D.activity_dot(rows, alts), 'flow_%s_%d' % (tag, k)), 2, S('flow_fig', b['title'] or f['name']), width=15.5)
+        elif t == 'decision':
+            tb = next((x for x in parse_blocks(b['body']) if x[0] == 'table'), None)
+            if tb: generic_table(tb[1], 2, S('decision_title', b['title'] or f['name']), size=10)
+        elif t == 'timeline':
+            pts = D.parse_timeline(b['body'])
+            if pts: figure(dot_render(D.timeline_dot(pts), 'tl_%s_%d' % (tag, k)), 2, S('timeline_fig', b['title'] or f['name']), width=15.5)
+
 CONSUMED = {'problem_value', 'main_flow', 'alt_flow'}
 def classic_extras(f, g):
     """classic template: '* Dữ liệu đầu vào' table (STT, field, description, required, validation, example) + '*Ghi chú' with the business rules"""
@@ -846,6 +880,7 @@ for k, m in enumerate(modules):
         if CLASSIC: heading('2.6.%d %s' % (_ucn, f['name']), 3)
         else: heading(S('h2_6_f', k + 1, f['id'].split('.')[1], f['name'], f['id']), 4)
         g = uc_table(m, f)
+        feature_diagrams(m, f)
         if CLASSIC:
             classic_extras(f, g); continue
         field_done = False
@@ -880,10 +915,43 @@ for k, m in enumerate(modules):
         para(name, bold=True, italic=True); render_blocks(bl)
 page_break()
 
+
+def perm_matrix():
+    if not want('perm_matrix'): return
+    roles = D.human_actors(CFG)
+    rows = [[S('perm_feature')] + roles]
+    for mm in DSPEC['modules']:
+        for f in mm['features']:
+            rr = [D.clean(x).lower() for x in (mm['map'].get(f['id'], {}).get('roles') or [])]
+            rows.append([f['id'] + ' ' + f['name']] + ['✓' if any(r.lower() in x or x in r.lower() for x in rr) else '' for r in roles])
+    if len(rows) < 2: return
+    para(S('perm_intro'))
+    w = max(1.6, min(3.0, 9.0 / max(1, len(roles))))
+    generic_table(rows, 3, S('perm_title'), widths=[16.0 - w * len(roles)] + [w] * len(roles), size=9.5)
+
+def data_section(num_heading=True):
+    if not want('erd'): return
+    b = next((x for x in D.all_diagram_blocks(DSPEC) if x['type'] == 'erd'), None)
+    if not b: return
+    ents, rels = D.parse_erd(b['body'])
+    if not ents: return
+    if num_heading: heading(S('h3_4'), 2)
+    para(S('data_intro'))
+    figure(dot_render(D.erd_dot(ents, rels), 'erd'), 3, S('erd_fig', lc_first(b['title'] or PRODUCT)), width=15.5)
+
+
 # ================================================================= 3 NON-FUNCTIONAL
 heading(S('h3'), 1)
 heading(S('h3_1'), 2)
 para(CFG['ui_layout'].replace('{product}', PRODUCT))
+if want('screen_map'):
+    _groups = collections.OrderedDict()
+    for sc_, uses in D.screens(DSPEC).items():
+        for num, name, fid in uses:
+            g_ = '%d. %s' % (num, name)
+            if sc_ not in _groups.setdefault(g_, []): _groups[g_].append(sc_)
+    para(S('screen_intro'))
+    figure(dot_render(D.tree_dot(PRODUCT, list(_groups.items())), 'screen_map'), 3, S('screen_fig'), width=15.5)
 if CLASSIC:
     _nav = OVK('navigation'); _navt = next((b[1] for b in _nav if b[0] == 'table'), None)
     for b in _nav:
@@ -902,8 +970,10 @@ if CLASSIC:
             for it, _ in b[1]: bullet(it)
         elif b[0] == 'p': para(b[1])
     para(S('perm_para') + CFG['uc_permissions'] + '.')
+    perm_matrix()
     heading(S('h3_3'), 2)
     for t_ in CFG['constraints'] + CFG.get('dependencies', []) + CFG.get('assumptions', []): bullet(t_)
+    data_section(False)
 for b in ([] if CLASSIC else OVK('navigation')):
     if b[0] == 'p': para(b[1])
     elif b[0] == 'table': generic_table(b[1], 3, S('nav_title'), widths=[3.2, 3.6, 5.2, 4.0], size=10)
@@ -925,6 +995,7 @@ for b in ([] if CLASSIC else OVK('compliance')):
     else: render_blocks([b])
 if not CLASSIC:
     para(S('perm_para') + CFG['uc_permissions'] + (', ' + CFG['audit_note'] if CFG.get('audit_note') else '') + '.')
+    perm_matrix()
 
     heading(S('h3_3'), 2)
     s1 = OVK('product')
@@ -945,6 +1016,7 @@ if not CLASSIC:
         if CFG.get(_key):
             para(_title, bold=True, italic=True, space_after=4)
             for t_ in CFG[_key]: bullet(t_)
+    data_section()
 if not CLASSIC: page_break()
 
 # ================================================================= 4 APPENDICES

@@ -24,6 +24,7 @@ Turn any running product (website, web app, mobile app) into a spec where every 
 2. **Write** (`spec-writer`, one per module, parallel): 16-block template (+ optional Formulas) (`references/feature-block-standard.md`), source labels, BR/AC/TC numbers. Every inventory row is described with its exact label. Script gate: `spec_lint.py` and `inventory_check.py --md` have no FAIL (unanswered questions are expected until Phase 4).
 3. **Deepen** (only for features under the bar in `playbook.md`, counted from the md files with grep, not by reading): rewrite those features; optional `spec-reviewer` for modules flagged `money_or_legal`.
 4. **Verify** (`spec-verifier`, one per module, grouped by role): answer every open question `Verified / Partly verified / Cannot verify`, retry `Needs data` / `Needs role` rows. Script gate: no unanswered question, `inventory_check.py --md` passes. Items left `Cannot verify` and `PO proposal` are not reviewed here: the exported document lists them as "To confirm", and the optional PO loop can close them.
+4b. **Diagrams** (`spec-diagrammer`, one per module plus one for the overview, parallel; v1.5): `diagram_plan.py <md dir> config.json` scores the diagrams this content needs (`references/diagrams.md`); the agent writes only the blocks marked `agent MISSING`, from facts already in the spec. Script gate: `diagram_check.py` has no FAIL.
 5. **Export**: `references/export.md`; customer template via `workflow `export-custom``.
 6. **PO loop (optional extension)**: decide with `references/po-loop-decision.md` after Phase 5; ask the user once with a recommendation; skip unless they want it. When used (repeat until signed off): `workflow `po-sheet`` exports open questions and proposed rules to Excel; the PO decides Accept / Change / Reject / Check on app; `workflow `po-import`` loads it (snapshot, `PO decided <date>` label, version bump, change list), a `spec-writer` aligns feature text from `po-apply.md`, `po-verify.md` goes to Phase 4, then export again. Never reopen a decided point; ids (INV, N.M, TBD, BR, BUG) stay stable across versions.
 Details and pitfalls: `references/playbook.md`.
@@ -145,6 +146,9 @@ Run Phase 4 for: <arguments>
 Group the open questions by role, then by module. For each role: ask the user to sign in as that role (role checkpoint, `references/session-rules.md`), then run one `spec-verifier` per module, each in its own tab or session of that role, at most 4 in parallel. Brief each with: scope (module, feature ids, file path), driver, signed-in role, environment, the paths of `references/safety-rules.md`, `references/drivers.md`, `references/coverage-rules.md` and `inventory.md` (do not paste their text). When all roles are done, merge the bug lists into the bugs table, list leftover test records for engineering, and report counts of verified / partly / cannot verify. Do not ask the user to review Cannot verify items here: they go to the PO sheet (`workflow `po-sheet``).
 
 ## Roles
+
+### spec-diagrammer
+Writes the diagram blocks (process, sequence, wizard flow, ERD, decision table, timeline) that the diagram planner lists as missing, using only facts already in the spec. Never edits feature text. Full prompt: `prompts/spec-diagrammer.md`.
 
 ### spec-recon
 Phase 1 recon. Maps every screen, API call, enum, role and glossary term of a running product (website, web app or mobile app) and records what cannot be seen. Does not write per-feature specs. Full prompt: `prompts/spec-recon.md`.
