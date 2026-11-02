@@ -354,6 +354,39 @@ def set_theme(name='modern'):
     ACTOR_IMG = os.path.join(HERE, T['actor'])
     if not os.path.exists(ACTOR_IMG): ACTOR_IMG = os.path.join(HERE, 'actor.png')
 
+def deep(c, light=0.34, sat=0.62):
+    """a strong ink colour with the hue of c (c may be a pale table shade)"""
+    import colorsys
+    c = c.lstrip('#'); r, g, b = (int(c[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    h, _, _ = colorsys.rgb_to_hls(r, g, b)
+    return '#%02X%02X%02X' % tuple(int(x * 255) for x in colorsys.hls_to_rgb(h, light, sat))
+
+def set_palette(colors, alt=None):
+    """recolour the current theme from the document's own colours: colors[0] is the main colour,
+    the rest are lane / accent colours; alt is the colour for alternate-flow cards"""
+    cs = ['#' + c.lstrip('#').upper() for c in colors if c]
+    if not cs or T.get('accents') == ['#000000']: return
+    p = cs[0]
+    T.update({'primary': p, 'primary_soft': _mix(p, .08), 'primary_line': _mix(p, .45), 'node_line': _mix(p, .3),
+              'uc_fill': _mix(p, .08), 'uc_line': _mix(p, .6), 'accents': cs + ['#475569', deep(p, .22, .5)]})
+    T['lanes'] = [(_mix(c, .05), _mix(c, .22), c) for c in cs] + [('#F8FAFC', '#E2E8F0', '#334155')]
+    a = '#' + (alt or (cs[1] if len(cs) > 1 else p)).lstrip('#').upper()
+    T.update({'alt_fill': _mix(a, .06), 'alt_line': _mix(a, .4), 'alt_ink': a})
+    _recolor_actor(p)
+
+def _recolor_actor(col):
+    global ACTOR_IMG
+    try:
+        from PIL import Image
+        import tempfile
+        out = os.path.join(tempfile.gettempdir(), 'pokit_actor_%s.png' % col.lstrip('#'))
+        if not os.path.exists(out):
+            im = Image.open(os.path.join(HERE, 'actor_modern.png')).convert('RGBA')
+            c = tuple(int(col.lstrip('#')[i:i + 2], 16) for i in (0, 2, 4))
+            im.putdata([c + (px[3],) for px in im.getdata()]); im.save(out)
+        ACTOR_IMG = out
+    except Exception: pass
+
 def esc(s): return s.replace('\\', '\\\\').replace('"', '\\"')
 def hesc(s): return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
 def wrap(s, n=24):

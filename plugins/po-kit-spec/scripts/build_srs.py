@@ -407,6 +407,10 @@ def bkey(label):
 
 # ---------------------------------------------------------------- diagrams (scripts/diagrams.py)
 import diagrams as D; D.set_theme((CFG.get('diagrams') or {}).get('theme') or 'modern')
+# diagram colours follow this document's own style: table shades (GREEN, ORANGE) and link blue,
+# deepened to ink strength; config "diagrams": {"palette": ["#hex", ...], "alt": "#hex"} overrides
+_dc = CFG.get('diagrams') or {}
+D.set_palette(_dc.get('palette') or [D.deep(GREEN), '#1F4E99', D.deep(ORANGE, .4, .6)], _dc.get('alt'))
 DSPEC = D.load_spec(MD, FILES)
 PLAN = D.plan(DSPEC, CFG)
 def want(t, scope='doc'): return D.wanted(PLAN, t, scope)
