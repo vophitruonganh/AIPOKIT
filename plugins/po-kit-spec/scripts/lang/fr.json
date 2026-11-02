@@ -285,6 +285,7 @@
     "linkmap_intro": "Le diagramme ci-dessous montre quels cas d'utilisation passent la main à ceux d'autres modules.",
     "linkmap_fig": "Carte des liens entre modules",
     "flow_ref": "Le flux principal du cas d'utilisation le plus représentatif, %s (%s), est dessiné avec ses branches en section 2.6.",
-    "h2_5_x": "2.5.%d %s"
+    "h2_5_x": "2.5.%d %s",
+    "linkmap_matrix_intro": "La matrice ci-dessous indique combien de fois les modules se passent la main : chaque cellule est le nombre de liens entre cas d'utilisation du module de la ligne vers celui de la colonne, plus la cellule est foncée plus il y a de liens, la dernière colonne donne le total sortant."
   }
 }

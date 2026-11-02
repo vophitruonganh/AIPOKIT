@@ -694,8 +694,8 @@ if want('linkmap'):
     if _edges:
         _off += 1
         heading(S('h2_5_x', _off, S('linkmap_title')), 3)
-        para(S('linkmap_intro'))
         _mods = [(mm['num'], mm['name'], [(f['id'], f['name']) for f in mm['features'] if f['id'] in _used]) for mm in DSPEC['modules']]
+        para(S('linkmap_matrix_intro') if D.linkmap_is_matrix([x for x in _mods if x[2]], _edges) else S('linkmap_intro'))
         figure(dot_render(D.linkmap_dot([x for x in _mods if x[2]], _edges), 'linkmap'), 2, S('linkmap_fig'), width=15.5)
 for k, m in enumerate(modules):
     heading(S('h2_5_n', k + 1 + _off, lc_first(m['name'])), 3)

@@ -283,6 +283,7 @@
     "linkmap_intro": "The diagram below shows which use cases hand off to use cases of other modules.",
     "linkmap_fig": "Cross-module link map",
     "flow_ref": "The main flow of the most representative use case, %s (%s), is drawn with its branches in section 2.6.",
-    "h2_5_x": "2.5.%d %s"
+    "h2_5_x": "2.5.%d %s",
+    "linkmap_matrix_intro": "The matrix below shows how often modules hand off to each other: each cell is the number of use-case links from the row module to the column module, darker means more links, and the last column is the total of outgoing links."
   }
 }

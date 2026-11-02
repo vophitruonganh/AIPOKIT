@@ -283,6 +283,7 @@
     "linkmap_intro": "Biểu đồ dưới đây cho biết use case nào chuyển tiếp sang use case của module khác.",
     "linkmap_fig": "Sơ đồ liên kết giữa các module",
     "flow_ref": "Luồng chính của use case tiêu biểu nhất, %s (%s), được vẽ kèm các nhánh ở mục 2.6.",
-    "h2_5_x": "2.5.%d %s"
+    "h2_5_x": "2.5.%d %s",
+    "linkmap_matrix_intro": "Bảng dưới đây cho biết các module chuyển tiếp cho nhau bao nhiêu lần: mỗi ô là số liên kết use case từ module ở hàng sang module ở cột, ô càng đậm thì liên kết càng nhiều, cột cuối là tổng liên kết đi ra."
   }
 }

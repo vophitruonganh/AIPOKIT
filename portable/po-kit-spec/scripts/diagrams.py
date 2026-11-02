@@ -595,25 +595,48 @@ def tree_dot(root, groups):
     s.append('}')
     return '\n'.join(s)
 
-def linkmap_dot(mods, edges):
-    """module-level link map. mods: [(num, name, [(fid, fname)])]; edges: [(fid_a, fid_b)] grouped per module pair"""
-    s = ['// engine=force', 'digraph G {', 'overlap=prism; overlap_scaling=-6; sep="+18"; esep="+8"; mode=major; len=2.2;', head('curved')]
-    for k, (num, name, feats) in enumerate(mods):
-        s.append(card('m%d' % num, name, 18, num=num, color=acc(k)))
-    pairs = collections.OrderedDict()
+def _mix(c, t):
+    """blend hex colour c with white; t=0 white, 1 full colour"""
+    c = c.lstrip('#'); r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+    return '#%02X%02X%02X' % tuple(int(255 + (x - 255) * t) for x in (r, g, b))
+
+def linkmap_is_matrix(mods, edges):
     own = {fid: num for num, _, feats in mods for fid, _ in feats}
+    return len({(own[a], own[b]) for a, b in edges if a in own and b in own and own[a] != own[b]}) > 8
+
+def linkmap_dot(mods, edges):
+    """module link map. Few links: left-to-right cards. Many links: a matrix (row = from, column = to, cell = number of use-case links), which never tangles."""
+    own = {fid: num for num, _, feats in mods for fid, _ in feats}
+    pairs = collections.OrderedDict()
     for a, b in edges:
-        if a not in own or b not in own: continue
-        pairs.setdefault((own[a], own[b]), []).append('%s→%s' % (a, b))
-    done = set()
-    for (ma, mb), lst in pairs.items():
-        if (ma, mb) in done: continue
-        back = pairs.get((mb, ma), []); done |= {(ma, mb), (mb, ma)}
-        n = len(lst) + len(back)
-        s.append('m%d -> m%d [%sxlabel="%s", fontsize=9, fontcolor="%s", penwidth=%.1f];'
-                 % (ma, mb, 'dir=both, arrowtail=%s, ' % T['arrow'] if back else '', ('%d / %d' % (len(lst), len(back))) if back else len(lst), acc(0), min(3.4, 1.0 + 0.3 * n)))
-    s.append('}')
-    return '\n'.join(s)
+        if a in own and b in own and own[a] != own[b]: pairs.setdefault((own[a], own[b]), []).append((a, b))
+    nums = [m[0] for m in mods]; names = {m[0]: m[1] for m in mods}
+    if len(pairs) <= 8:
+        s = ['digraph G {', 'rankdir=LR; nodesep=0.5; ranksep=1.2;', head('spline')]
+        for k, n in enumerate(nums): s.append(card('m%d' % n, names[n], 18, num=n, color=acc(k)))
+        for (ma, mb), lst in pairs.items():
+            s.append('m%d -> m%d [label="%s", fontcolor="%s"];' % (ma, mb, wl(', '.join('%s→%s' % x for x in lst[:3]) + (' …' if len(lst) > 3 else ''), 18), acc(0)))
+        s.append('}')
+        return '\n'.join(s)
+    mx = max(len(v) for v in pairs.values())
+    base = acc(0)
+    hdr = '<TD BGCOLOR="white"></TD>' + ''.join('<TD WIDTH="34" BGCOLOR="white"><FONT COLOR="%s" POINT-SIZE="10"><B>%d</B></FONT></TD>' % (acc(k), n) for k, n in enumerate(nums))
+    hdr += '<TD BGCOLOR="white"><FONT COLOR="%s" POINT-SIZE="9">→</FONT></TD>' % T['muted']
+    rows = []
+    for k, a in enumerate(nums):
+        cells = ''
+        for b in nums:
+            if a == b: cells += '<TD BGCOLOR="%s"></TD>' % T['row_alt']; continue
+            c = len(pairs.get((a, b), []))
+            if not c: cells += '<TD BGCOLOR="white"><FONT COLOR="%s" POINT-SIZE="9">·</FONT></TD>' % T['edge_soft']; continue
+            t = 0.18 + 0.82 * c / mx
+            cells += '<TD BGCOLOR="%s"><FONT COLOR="%s" POINT-SIZE="10"><B>%d</B></FONT></TD>' % (_mix(base, t), 'white' if t > 0.55 else T['ink'], c)
+        tot = sum(len(v) for (x, _), v in pairs.items() if x == a)
+        rows.append('<TR><TD ALIGN="LEFT" BGCOLOR="white"><FONT COLOR="%s"><B>%d</B></FONT>  <FONT COLOR="%s">%s</FONT></TD>%s<TD BGCOLOR="white"><FONT COLOR="%s" POINT-SIZE="9">%d</FONT></TD></TR>'
+                    % (acc(k), a, T['ink'], hesc(clean(names[a], 34)), cells, T['muted'], tot))
+    tbl = ('<<TABLE BORDER="1" COLOR="%s" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="white" STYLE="rounded">'
+           '<TR>%s</TR>%s</TABLE>>' % (T['card_line'], hdr, ''.join(rows)))
+    return '\n'.join(['digraph G {', head(), 'm [shape=plain, class="card", color="%s", label=%s];' % (T['card_line'], tbl), '}'])
 
 def timeline_dot(points):
     s = ['digraph G {', 'rankdir=LR; nodesep=0.3; ranksep=0.5;', head('line'),
