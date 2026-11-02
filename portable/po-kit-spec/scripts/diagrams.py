@@ -354,6 +354,11 @@ def set_theme(name='modern'):
     ACTOR_IMG = os.path.join(HERE, T['actor'])
     if not os.path.exists(ACTOR_IMG): ACTOR_IMG = os.path.join(HERE, 'actor.png')
 
+def set_font(name):
+    """use the document's sans font for diagrams when it is installed"""
+    global FONT
+    if name: FONT = _font([name] + T['fonts'])
+
 def deep(c, light=0.34, sat=0.62):
     """a strong ink colour with the hue of c (c may be a pale table shade)"""
     import colorsys

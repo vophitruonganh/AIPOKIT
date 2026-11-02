@@ -31,8 +31,29 @@ VI = CFG.get('lang', 'en') == 'vi'
 WHEN_WORD = {'vi': 'Khi', 'fr': 'Quand'}.get(CFG.get('spec_lang', CFG.get('lang', 'en')))
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(os.path.dirname(os.path.abspath(OUT)), 'srs_img'); os.makedirs(IMG, exist_ok=True)   # diagram images next to the output
-FONT = 'Times New Roman'
-GREEN = 'C6EFE0'; ORANGE = 'FBD4B4'; LIGHT = 'E8F7F0'
+# ---------------------------------------------------------------- document style presets (config "doc_style")
+# label = first-column shade of the use-case table, head = header-row shade, head_ink = header text colour,
+# ink = heading colour, accent = rule under level-1 headings and the cover bar, line = table borders,
+# zebra = alternate row shade, palette = diagram colours (main first)
+DOC_STYLES = {
+    'legacy': dict(font='Times New Roman', size=13, ink='000000', accent='000000', label='C6EFE0', head='FBD4B4', head_ink='000000',
+                   line='000000', zebra=None, link='1F4E99', cap_ink='000000', h2_italic=True, h1_rule=False,
+                   palette=None),
+    'slate': dict(font='Inter', size=11, ink='0F172A', accent='0F766E', label='F0FDFA', head='0F766E', head_ink='FFFFFF',
+                  line='CBD5E1', zebra='F8FAFC', link='0F766E', cap_ink='475569', h2_italic=False, h1_rule=True,
+                  palette=['#0F766E', '#475569', '#B45309']),
+    'navy': dict(font='Inter', size=11, ink='1E293B', accent='1E40AF', label='EFF6FF', head='1E3A8A', head_ink='FFFFFF',
+                 line='CBD5E1', zebra='F8FAFC', link='1D4ED8', cap_ink='475569', h2_italic=False, h1_rule=True,
+                 palette=['#1E40AF', '#0F766E', '#475569']),
+    'mint': dict(font='Inter', size=11, ink='064E3B', accent='059669', label='ECFDF5', head='D1FAE5', head_ink='064E3B',
+                 line='D1D5DB', zebra='F9FAFB', link='047857', cap_ink='4B5563', h2_italic=False, h1_rule=True,
+                 palette=['#047857', '#1D4ED8', '#9A3412']),
+}
+DS = dict(DOC_STYLES.get(CFG.get('doc_style') or ('legacy' if CLASSIC else 'slate'), DOC_STYLES['slate']))
+if CFG.get('doc_font'): DS['font'] = CFG['doc_font']
+FONT = DS['font']
+GREEN = DS['label']; ORANGE = DS['head']; LIGHT = 'E8F7F0'
+def _rgb(h): return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 TEXT_W = 16.0  # cm
 
 # ---------------------------------------------------------------- markdown
@@ -117,7 +138,7 @@ def _run(par, t, bold, italic, size, mono=False, link=None):
         if mono:
             r.font.name = 'Liberation Mono'; r.font.size = Pt((size or 13) - 2)
             r._element.rPr.rFonts.set(qn('w:hAnsi'), 'Liberation Mono')
-        if link: r.font.color.rgb = RGBColor(0x1F, 0x4E, 0x99); r.underline = True
+        if link: r.font.color.rgb = _rgb(DS['link']); r.underline = True
 
 def plain(s):
     s = re.sub(r'\*\*(.+?)\*\*', r'\1', s); s = re.sub(r'`([^`]+)`', r'\1', s)
@@ -126,13 +147,19 @@ def plain(s):
 
 # ---------------------------------------------------------------- docx helpers
 doc = Document()
-st = doc.styles['Normal']; st.font.name = FONT; st.font.size = Pt(12 if CLASSIC else 13)
+st = doc.styles['Normal']; st.font.name = FONT; st.font.size = Pt(12 if CLASSIC else DS['size'])
 st.element.rPr.rFonts.set(qn('w:eastAsia'), FONT)
 st.paragraph_format.space_after = Pt(6); st.paragraph_format.line_spacing = 1.15
-for lvl, size, ital in ([(1, 14, False), (2, 13, True), (3, 13, False), (4, 12, False)] if CLASSIC else [(1, 16, False), (2, 14, True), (3, 13.5, False), (4, 13, False)]):
+_hs = DS['size'] / 13.0
+for lvl, size, ital in ([(1, 14, False), (2, 13, True), (3, 13, False), (4, 12, False)] if CLASSIC else [(1, 16, False), (2, 14, DS['h2_italic']), (3, 13.5, False), (4, 13, False)]):
+    if not CLASSIC and DS['h1_rule']: size = {1: 18, 2: 14, 3: 12.5, 4: 11.5}[lvl]
     h = doc.styles['Heading %d' % lvl]
     h.font.name = FONT; h.font.size = Pt(size); h.font.bold = lvl < 3 or (lvl == 4 and not CLASSIC); h.font.italic = ital
-    h.font.color.rgb = RGBColor(0, 0, 0)
+    h.font.color.rgb = _rgb(DS['ink'] if lvl > 1 or not DS['h1_rule'] else DS['accent'])
+    if DS['h1_rule'] and lvl == 1:
+        _pp = h.element.get_or_add_pPr(); _bd = OxmlElement('w:pBdr'); _b = OxmlElement('w:bottom')
+        for _k, _v in (('w:val', 'single'), ('w:sz', '8'), ('w:space', '4'), ('w:color', DS['line'])): _b.set(qn(_k), _v)
+        _bd.append(_b); _pp.append(_bd)
     rpr = h.element.get_or_add_rPr(); rf = rpr.find(qn('w:rFonts'))
     if rf is None: rf = OxmlElement('w:rFonts'); rpr.append(rf)
     for a in ('w:ascii', 'w:hAnsi', 'w:cs', 'w:eastAsia'): rf.set(qn(a), FONT)
@@ -155,7 +182,7 @@ def shade(cell, color):
 def set_borders(tbl):
     tblPr = tbl._tbl.tblPr; b = OxmlElement('w:tblBorders')
     for e in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV'):
-        x = OxmlElement('w:' + e); x.set(qn('w:val'), 'single'); x.set(qn('w:sz'), '4'); x.set(qn('w:color'), '000000'); b.append(x)
+        x = OxmlElement('w:' + e); x.set(qn('w:val'), 'single'); x.set(qn('w:sz'), '4'); x.set(qn('w:color'), DS['line']); b.append(x)
     tblPr.append(b)
 
 def set_widths(tbl, widths):
@@ -176,6 +203,12 @@ def cell_text(cell, text, bold=False, size=11, align=None, italic=False):
     runs(p, text, bold, italic, size)
     return p
 
+def head_cell(cell, color=None):
+    shade(cell, color or ORANGE)
+    if DS['head_ink'] != '000000':
+        for p_ in cell.paragraphs:
+            for r_ in p_.runs: r_.font.color.rgb = _rgb(DS['head_ink'])
+
 def no_split(row):
     trPr = row._tr.get_or_add_trPr(); x = OxmlElement('w:cantSplit'); trPr.append(x)
 
@@ -185,7 +218,7 @@ def header_repeat(row):
 def para(text='', style=None, align=None, bold=False, italic=False, size=None, space_after=None, indent=None):
     p = doc.add_paragraph(style=style)
     if align is not None: p.alignment = align
-    elif style is None: p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    elif style is None: p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY if DS['cap_ink'] == '000000' else WD_ALIGN_PARAGRAPH.LEFT
     if text: runs(p, text, bold, italic, size)
     if space_after is not None: p.paragraph_format.space_after = Pt(space_after)
     if indent is not None: p.paragraph_format.left_indent = Cm(indent)
@@ -209,7 +242,12 @@ def caption(kind, chap, title):
     if CLASSIC: title = re.sub(r'"([^"]*)"', '\u201c\\1\u201d', title)
     label = '%s %d-%d: %s' % (kind, chap, COUNT[k], title)
     CAPTIONS[kind].append(label)
-    p = para(label, align=WD_ALIGN_PARAGRAPH.CENTER, bold=True, size=12, space_after=10)
+    if DS['cap_ink'] == '000000':
+        return para(label, align=WD_ALIGN_PARAGRAPH.CENTER, bold=True, size=12, space_after=10)
+    p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_after = Pt(12)
+    head_, _, rest_ = label.partition(': ')
+    r1 = p.add_run(head_ + ': '); r1.bold = True; r1.font.size = Pt(9.5); r1.font.color.rgb = _rgb(DS['accent'])
+    r2 = p.add_run(plain(rest_)); r2.font.size = Pt(9.5); r2.font.color.rgb = _rgb(DS['cap_ink'])
     return p
 
 def generic_table(rows, chap=None, title=None, widths=None, size=10.5, header=True):
@@ -224,7 +262,8 @@ def generic_table(rows, chap=None, title=None, widths=None, size=10.5, header=Tr
             cl = t.cell(i, j)
             cell_text(cl, c, bold=(header and i == 0), size=size,
                       align=WD_ALIGN_PARAGRAPH.CENTER if header and i == 0 else None)
-            if header and i == 0: shade(cl, ORANGE)
+            if header and i == 0: head_cell(cl)
+            elif DS['zebra'] and i % 2 == 0: shade(cl, DS['zebra'])
     if header: header_repeat(t.rows[0])
     set_widths(t, widths)
     if title: caption(SR['tbl'], chap, title)
@@ -410,7 +449,32 @@ import diagrams as D; D.set_theme((CFG.get('diagrams') or {}).get('theme') or 'm
 # diagram colours follow this document's own style: table shades (GREEN, ORANGE) and link blue,
 # deepened to ink strength; config "diagrams": {"palette": ["#hex", ...], "alt": "#hex"} overrides
 _dc = CFG.get('diagrams') or {}
-D.set_palette(_dc.get('palette') or [D.deep(GREEN), '#1F4E99', D.deep(ORANGE, .4, .6)], _dc.get('alt'))
+def _diagram_style():
+    """choose diagram style and colours. Order: 1 config palette; 2 reference Word file (config "style_from",
+    else style/*.docx|dotx or *template*.docx|*.dotx next to the spec); 3 this SRS template's own colours;
+    4 on any error the built-in modern palette"""
+    if _dc.get('palette'): return 'config', _dc['palette'], _dc.get('alt'), None, None
+    import glob
+    base = os.path.dirname(os.path.abspath(sys.argv[1].rstrip('/')))
+    ref = _dc.get('style_from')
+    if ref and not os.path.isabs(ref): ref = os.path.join(base, ref)
+    if not ref:
+        found = sorted(glob.glob(os.path.join(base, 'style', '*.do[ct]x')) + glob.glob(os.path.join(base, '*.dotx'))
+                       + glob.glob(os.path.join(base, '*[Tt]emplate*.docx')))
+        ref = found[0] if found else None
+    if ref and os.path.exists(ref):
+        import style_detect
+        st = style_detect.detect(ref)
+        if st.get('palette'): return 'file ' + os.path.basename(ref), st['palette'], _dc.get('alt') or st.get('alt'), st.get('font'), st.get('theme')
+    if DS.get('palette'): return 'doc style ' + (CFG.get('doc_style') or ''), DS['palette'], _dc.get('alt') or DS['palette'][1], FONT if FONT != 'Times New Roman' else None, None
+    return 'document', [D.deep(GREEN), D.deep(ORANGE, .4, .6), '#1F4E99'], _dc.get('alt') or '#1F4E99', None, None
+try:
+    _src, _pal, _alt, _font_name, _th = _diagram_style()
+    if _th == 'mono' and not _dc.get('theme'): pass   # greys on the modern cards
+    D.set_palette(_pal, _alt); D.set_font(_font_name)
+except Exception as _e:
+    _src = 'default (%s)' % _e
+print('diagram style: %s' % _src, file=sys.stderr)
 DSPEC = D.load_spec(MD, FILES)
 PLAN = D.plan(DSPEC, CFG)
 def want(t, scope='doc'): return D.wanted(PLAN, t, scope)
@@ -447,7 +511,7 @@ UCSEQ = {f['id']: n + 1 for n, f in enumerate(f for m in modules for f in m['fea
 for _ in range(2): para('')
 p = para('', align=WD_ALIGN_PARAGRAPH.LEFT)
 pPr = p._p.get_or_add_pPr(); bd = OxmlElement('w:pBdr'); bt = OxmlElement('w:bottom')
-bt.set(qn('w:val'), 'single'); bt.set(qn('w:sz'), '36'); bt.set(qn('w:color'), '000000'); bd.append(bt); pPr.append(bd)
+bt.set(qn('w:val'), 'single'); bt.set(qn('w:sz'), '36'); bt.set(qn('w:color'), DS['accent']); bd.append(bt); pPr.append(bd)
 COV = WD_ALIGN_PARAGRAPH.RIGHT
 if CLASSIC:
     para(S('cover_title'), align=COV, bold=True, size=22, space_after=4)
@@ -784,7 +848,7 @@ def uc_table(m, f):
             cell_text(mc, S('none'), size=10.5); return
         inner = mc.add_table(rows=1, cols=3); set_borders(inner)
         for j, h in enumerate(SR['flow_hdr']):
-            cell_text(inner.cell(0, j), h, bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER); shade(inner.cell(0, j), ORANGE)
+            cell_text(inner.cell(0, j), h, bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER); head_cell(inner.cell(0, j))
         for k, (a, txt) in enumerate(rows):
             ir = inner.add_row(); ic = ir.cells
             cell_text(ic[0], ('A%d' % (k + 1)) if alt else ('%d.' % (k + 1)), size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
