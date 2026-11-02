@@ -224,8 +224,24 @@ def para(text='', style=None, align=None, bold=False, italic=False, size=None, s
     if indent is not None: p.paragraph_format.left_indent = Cm(indent)
     return p
 
+_BM = [0]
+def bookmark(p, name):
+    """wrap paragraph p in a Word bookmark (target of the TOC links; also a PDF destination)"""
+    _BM[0] += 1
+    a = OxmlElement('w:bookmarkStart'); a.set(qn('w:id'), str(_BM[0])); a.set(qn('w:name'), name)
+    b = OxmlElement('w:bookmarkEnd'); b.set(qn('w:id'), str(_BM[0]))
+    pPr = p._p.find(qn('w:pPr'))
+    if pPr is not None: pPr.addnext(a)
+    else: p._p.insert(0, a)
+    p._p.append(b)
+    return p
+
 HEADINGS = []   # (level, text)
+HEAD_BM = []    # bookmark name per heading, same order
 def heading(text, level):
+    p = _heading(text, level); name = '_Toc_h%d' % len(HEAD_BM)
+    bookmark(p, name); HEAD_BM.append(name); return p
+def _heading(text, level):
     if CLASSIC and re.match(r'^\d+(\.\d+)*\s', text):   # classic template: number, tab, title
         text = re.sub(r'"([^"]*)"', '\u201c\\1\u201d', text)
         num, rest = text.split(' ', 1)
@@ -242,6 +258,11 @@ def caption(kind, chap, title):
     if CLASSIC: title = re.sub(r'"([^"]*)"', '\u201c\\1\u201d', title)
     label = '%s %d-%d: %s' % (kind, chap, COUNT[k], title)
     CAPTIONS[kind].append(label)
+    _cp = _caption_par(label)
+    bookmark(_cp, CAP_BM.setdefault(label, '_Toc_c%d' % len(CAP_BM)))
+    return _cp
+CAP_BM = {}
+def _caption_par(label):
     if DS['cap_ink'] == '000000':
         return para(label, align=WD_ALIGN_PARAGRAPH.CENTER, bold=True, size=12, space_after=10)
     p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_after = Pt(12)
@@ -559,16 +580,20 @@ doc.sections[0].footer.is_linked_to_previous = False
 # ---- TOC placeholders (filled in pass 2)
 TOC_ANCHOR = para(S('toc'), align=WD_ALIGN_PARAGRAPH.CENTER, bold=True, size=16)
 TOC_PARAS = []
-def toc_line(text, level, page):
+def toc_line(text, level, page, anchor=None):
     p = doc.add_paragraph(); p.paragraph_format.space_after = Pt(3); p.paragraph_format.line_spacing = 1.0
     p.paragraph_format.left_indent = Cm(0.5 * (level - 1)); p.paragraph_format.right_indent = Cm(0)
     p.paragraph_format.tab_stops.add_tab_stop(Cm(TEXT_W), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS)
     runs(p, text + '\t' + page, size=12)
+    if anchor:   # clickable line: internal hyperlink to the heading / caption bookmark
+        h = OxmlElement('w:hyperlink'); h.set(qn('w:anchor'), anchor); h.set(qn('w:history'), '1')
+        for r in p._p.findall(qn('w:r')): h.append(r)
+        p._p.append(h)
     return p
 # Body is built first; the TOC paragraphs are generated afterwards and moved after toc_marker.
 toc_marker = doc.add_paragraph()
 page_break_after_toc = doc.add_paragraph(); page_break_after_toc.add_run().add_break(WD_BREAK.PAGE)
-lof_marker = para(S('lof'), align=WD_ALIGN_PARAGRAPH.CENTER, bold=True, size=16)
+lof_marker = para(S('lof'), align=WD_ALIGN_PARAGRAPH.CENTER, bold=True, size=16); bookmark(lof_marker, '_Toc_lof')
 lof_anchor = doc.add_paragraph()
 pb2 = doc.add_paragraph(); pb2.add_run().add_break(WD_BREAK.PAGE)
 
@@ -1117,18 +1142,19 @@ def move_after(anchor, paras):
         ref.addnext(p._p); ref = p._p
 
 toc = []
+HEAD_BM = [b for (l_, t_), b in zip(HEADINGS, HEAD_BM) if l_ <= 4]
 for lvl, text in HEADINGS:
     if lvl > 4: continue
     num = text.split(' ', 1)[0]
     rest = text.split(' ', 1)[1] if ' ' in text else ''
     pg_ = str(PAGES.get('h:' + text, '00'))
-    toc.append(toc_line(num + ' ' + rest, lvl, pg_))
-toc.insert(0, toc_line(S('lof'), 1, str(PAGES.get('lof', '00'))))
+    toc.append(toc_line(num + ' ' + rest, lvl, pg_, HEAD_BM[len(toc)]))
+toc.insert(0, toc_line(S('lof'), 1, str(PAGES.get('lof', '00')), '_Toc_lof'))
 move_after(toc_marker, toc)
 lof = []
 for kind in (SR['fig'], SR['tbl']):
     for c in CAPTIONS[kind]:
-        lof.append(toc_line(c, 1, str(PAGES.get('c:' + c.split(':')[0], '00'))))
+        lof.append(toc_line(c, 1, str(PAGES.get('c:' + c.split(':')[0], '00')), CAP_BM.get(c)))
     sp = doc.add_paragraph(); lof.append(sp)
 move_after(lof_anchor, lof)
 
