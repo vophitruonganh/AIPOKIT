@@ -6,7 +6,7 @@
 *In your language. In your template. With evidence for every claim.*
 
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757)
-![version](https://img.shields.io/badge/po--kit--spec-v1.5.0-blue)
+![version](https://img.shields.io/badge/po--kit--spec-v1.6.0-blue)
 ![languages](https://img.shields.io/badge/document%20languages-en%20%C2%B7%20vi%20%C2%B7%20fr-brightgreen)
 ![safety](https://img.shields.io/badge/crawling-read--only%20by%20default-success)
 
@@ -89,7 +89,7 @@ The installer takes 1 to 5 minutes and does everything:
 ```text
 ✔ Successfully added marketplace: aipokit
 ✔ Successfully installed plugin: po-kit-spec@aipokit (scope: user)
-    Version: 1.5.0
+    Version: 1.6.0
     Status: ✔ enabled
 Setup done. Python modules are in /Users/<you>/.po-kit/venv
 Environment OK
@@ -128,7 +128,7 @@ unzip -oq ~/Downloads/AIPOKIT-main.zip -d /tmp/aipokit && bash /tmp/aipokit/*/in
 
 ## 4. Check that it works
 
-1. In Terminal: `claude plugin list` shows **po-kit-spec@aipokit**, version **1.5.0**, **enabled**.
+1. In Terminal: `claude plugin list` shows **po-kit-spec@aipokit**, version **1.6.0**, **enabled**.
 2. Close any open Claude Code window and **start a new session** (commands load only in new sessions).
 3. In the new session type `/po-kit-spec:` and you see the list of commands (`start`, `setup`, `export-srs`…).
 4. Optional: type `/po-kit-spec:setup`. Claude answers "Environment OK" or installs what is missing.
@@ -293,6 +293,7 @@ Full rules: `plugins/po-kit-spec/skills/reverse-spec-builder/references/safety-r
 
 | Version | Change |
 | --- | --- |
+| 1.6.0 | New document look: `doc_style` presets (`slate` default: Inter, teal headings and header rows, light borders, zebra rows; `navy`, `mint`, `legacy`); clickable table of contents and list of figures (bookmarks, PDF links and outline); UML-correct diagrams (ellipse use cases with stick-figure actors, «include»/«extend» from `usecase` blocks, decision diamonds with [guard]/[else], dashed arrows for replies only, amber for unverified) and a notation table in section 1; diagram colours follow the document, auto-detected from a reference Word file (`style_detect.py`) with config override and default fallback; card-style diagrams with shadows (Chromium render); dense module links drawn as a matrix. |
 | 1.5.0 | Diagrams chosen by content: a planner scores 14 diagram types from the spec (Must / Should / Could), profiles `full` / `classic` / `po` / `dev`, new `spec-diagrammer` agent and `diagram_check.py` gate; SRS gains a context diagram, cross-module link map, activity diagrams with branches, sequence, screen flow, decision table, timeline, screen map, permission matrix and a 3.4 Data requirements ERD; PNG + SVG. |
 | 1.4.4 | Published on GitHub as **AIPOKIT**; marketplace renamed `aipokit` (install: `po-kit-spec@aipokit`); install from GitHub in one command. |
 | 1.4.3 | `/po-kit-spec:start`: one entry point to pick an open tab, a URL, a running Android app or a screenshots folder. |
