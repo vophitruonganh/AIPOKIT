@@ -32,7 +32,7 @@ In 2.5 the old "longest flow of each module" figure is kept only when 2.6 does n
 | `po` | business readers | context, UC overview, process, linkmap, state, screen map, flow, permission matrix | 1 |
 | `dev` | developers | context, state, sequence, erd, decision, activity, timeline, permission matrix | 3 |
 
-`include` / `exclude` take type names and win over the profile. Inside the budget the order is Must, then Should, then Could.
+`include` / `exclude` take type names and win over the profile. `"theme"`: `modern` (default: Inter or the system sans font, indigo/teal/orange lanes, white rounded nodes, amber dashed for unverified, violet for branches) or `classic` (the old yellow boxes). Inside the budget the order is Must, then Should, then Could.
 
 ## Block syntax (fenced code inside the md files)
 

@@ -406,7 +406,7 @@ def bkey(label):
     return label
 
 # ---------------------------------------------------------------- diagrams (scripts/diagrams.py)
-import diagrams as D
+import diagrams as D; D.set_theme((CFG.get('diagrams') or {}).get('theme') or 'modern')
 DSPEC = D.load_spec(MD, FILES)
 PLAN = D.plan(DSPEC, CFG)
 def want(t, scope='doc'): return D.wanted(PLAN, t, scope)

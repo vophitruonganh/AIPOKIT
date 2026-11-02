@@ -295,9 +295,59 @@ def wanted(P, t, scope):
     return any(c['use'] and c['type'] == t and c['scope'] == scope for c in P)
 
 # ------------------------------------------------------------------ rendering
+# Themes: config.json -> "diagrams": {"theme": "modern" | "classic"}; build_srs calls set_theme().
+THEMES = {
+    'modern': {
+        'fonts': ['Inter', 'Helvetica Neue', 'Segoe UI', 'Arial', 'Liberation Sans', 'DejaVu Sans'],
+        'ink': '#0F172A', 'text': '#334155', 'muted': '#64748B', 'edge': '#64748B', 'edge_soft': '#CBD5E1',
+        'primary': '#4F46E5', 'primary_ink': '#FFFFFF', 'primary_soft': '#EEF2FF', 'primary_line': '#A5B4FC',
+        'node_fill': '#FFFFFF', 'node_line': '#C7D2FE', 'pen': '1.3',
+        'uc_fill': '#EEF2FF', 'uc_line': '#818CF8',
+        'boundary_fill': '#F8FAFC', 'boundary_line': '#CBD5E1',
+        'ext_fill': '#F1F5F9', 'ext_line': '#94A3B8',
+        'unv_fill': '#FFFBEB', 'unv_line': '#F59E0B',
+        'alt_fill': '#FAF5FF', 'alt_line': '#C4B5FD', 'alt_ink': '#6D28D9',
+        'row_alt': '#F8FAFC',
+        # lanes / groups: (background, border, title colour)
+        'lanes': [('#F5F7FF', '#E0E7FF', '#4338CA'), ('#F0FDFA', '#CCFBF1', '#0F766E'), ('#FFF7ED', '#FED7AA', '#C2410C'),
+                  ('#FDF2F8', '#FBCFE8', '#BE185D'), ('#F8FAFC', '#E2E8F0', '#334155')],
+        'arrow': 'vee', 'arrowsize': '0.7', 'actor': 'actor_modern.png',
+    },
+    'classic': {
+        'fonts': ['Liberation Sans', 'Arial', 'DejaVu Sans'],
+        'ink': '#000000', 'text': '#000000', 'muted': '#555555', 'edge': '#333333', 'edge_soft': '#999999',
+        'primary': '#FFFFCC', 'primary_ink': '#000000', 'primary_soft': '#FFFFCC', 'primary_line': '#8a7a2a',
+        'node_fill': '#FFFFCC', 'node_line': '#8a7a2a', 'pen': '1.0',
+        'uc_fill': '#FFFFCC', 'uc_line': '#8a7a2a',
+        'boundary_fill': '#FFFFFF', 'boundary_line': '#555555',
+        'ext_fill': '#FFFFFF', 'ext_line': '#555555',
+        'unv_fill': '#FFFFCC', 'unv_line': '#8a7a2a',
+        'alt_fill': '#FFFFFF', 'alt_line': '#8a7a2a', 'alt_ink': '#000000',
+        'row_alt': '#FFFFFF',
+        'lanes': [('#F4F4F4', '#777777', '#000000'), ('#EAF4FB', '#777777', '#000000'), ('#FBF3EA', '#777777', '#000000'),
+                  ('#EEF8EE', '#777777', '#000000'), ('#F6EEF8', '#777777', '#000000')],
+        'arrow': 'normal', 'arrowsize': '0.8', 'actor': 'actor.png',
+    },
+}
+T = {}
 FONT = 'Liberation Sans'
 ACTOR_IMG = os.path.join(HERE, 'actor.png')
-FILL = '#FFFFCC'; LINE = '#8a7a2a'; EDGE = '#333333'
+
+def _font(cands):
+    try:
+        have = subprocess.run(['fc-list', ':', 'family'], capture_output=True, text=True).stdout
+        fams = {x.strip() for l in have.splitlines() for x in l.split(',')}
+        for c in cands:
+            if c in fams: return c
+    except Exception: pass
+    return cands[-1]
+
+def set_theme(name='modern'):
+    global T, FONT, ACTOR_IMG
+    T = dict(THEMES.get(name) or THEMES['modern'])
+    FONT = _font(T['fonts'])
+    ACTOR_IMG = os.path.join(HERE, T['actor'])
+    if not os.path.exists(ACTOR_IMG): ACTOR_IMG = os.path.join(HERE, 'actor.png')
 
 def esc(s): return s.replace('\\', '\\\\').replace('"', '\\"')
 def hesc(s): return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
@@ -316,27 +366,43 @@ def render(dot_src, out_dir, name):
     p = os.path.join(out_dir, name)
     open(p + '.dot', 'w', encoding='utf-8').write(dot_src)
     for extra in ([], ['-Gsplines=polyline'], ['-Gsplines=line']):   # graphviz routing can fail on dense clusters
-        r = subprocess.run(['dot', '-Tpng', '-Gdpi=170'] + extra + ['-o', p + '.png', p + '.dot'], capture_output=True)
+        eng = ['neato', '-n2'] if dot_src.startswith('// engine=neato') else ['dot']
+        r = subprocess.run(eng + ['-Tpng', '-Gdpi=170'] + extra + ['-o', p + '.png', p + '.dot'], capture_output=True)
         if r.returncode == 0: break
     else: raise RuntimeError('graphviz failed on %s: %s' % (name, r.stderr.decode(errors='replace')[-300:]))
-    subprocess.run(['dot', '-Tsvg'] + extra + ['-o', p + '.svg', p + '.dot'], check=True, capture_output=True)
+    subprocess.run(eng + ['-Tsvg'] + extra + ['-o', p + '.svg', p + '.dot'], check=True, capture_output=True)
     return p + '.png'
 
-HEAD = 'node [fontname="%s", fontsize=11]; edge [fontname="%s", fontsize=9.5, color="%s"];' % (FONT, FONT, EDGE)
+def head():
+    """graph-wide defaults of the current theme"""
+    return ('bgcolor="white"; pad=0.25; fontname="%(f)s"; fontcolor="%(ink)s";\n'
+            'node [fontname="%(f)s", fontsize=11, fontcolor="%(text)s", penwidth=%(pen)s, margin="0.16,0.07"];\n'
+            'edge [fontname="%(f)s", fontsize=9, fontcolor="%(muted)s", color="%(edge)s", penwidth=1.1, arrowhead=%(arrow)s, arrowsize=%(arrowsize)s];'
+            % dict(T, f=FONT))
+def box(fill=None, line=None, extra=''):
+    return 'node [shape=box, style="rounded,filled", fillcolor="%s", color="%s"%s];' % (fill or T['node_fill'], line or T['node_line'], extra)
+def unv(): return 'style="rounded,filled,dashed", fillcolor="%s", color="%s"' % (T['unv_fill'], T['unv_line'])
+def lane_style(li):
+    bg, bd, ti = T['lanes'][li % len(T['lanes'])]
+    return 'label=<<B>%%s</B>>; fontname="%s"; fontsize=11.5; fontcolor="%s"; style="rounded,filled"; fillcolor="%s"; color="%s"; penwidth=1.2; margin=14;' % (FONT, ti, bg, bd)
+def start_end():
+    return ['start [shape=circle, label="", width=0.2, style=filled, fillcolor="%s", color="%s"];' % (T['primary'], T['primary'] if T['primary'] != '#FFFFCC' else 'black'),
+            'end [shape=doublecircle, label="", width=0.14, style=filled, fillcolor="%s", color="%s"];' % (T['primary'], T['primary'] if T['primary'] != '#FFFFCC' else 'black')]
 
 def actor_node(nid, label):
     return ('%s [shape=none, margin=0, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">'
-            '<TR><TD FIXEDSIZE="TRUE" WIDTH="46" HEIGHT="70"><IMG SRC="%s" SCALE="TRUE"/></TD></TR>'
-            '<TR><TD><FONT POINT-SIZE="11">%s</FONT></TD></TR></TABLE>>];' % (nid, ACTOR_IMG, hw(label, 16)))
+            '<TR><TD FIXEDSIZE="TRUE" WIDTH="44" HEIGHT="58"><IMG SRC="%s" SCALE="TRUE"/></TD></TR>'
+            '<TR><TD><FONT POINT-SIZE="11" COLOR="%s"><B>%s</B></FONT></TD></TR></TABLE>>];' % (nid, ACTOR_IMG, T['ink'], hw(label, 16)))
 
 def uc_dot(actors, ucs, edges, title):
-    s = ['digraph G {', 'rankdir=LR; nodesep=0.25; ranksep=1.1; splines=true; newrank=true;', HEAD,
-         'edge [arrowhead=none];']
+    s = ['digraph G {', 'rankdir=LR; nodesep=0.25; ranksep=1.1; splines=true; newrank=true;', head(),
+         'edge [arrowhead=none, color="%s"];' % T['edge']]
     left = actors[:(len(actors) + 1) // 2]; right = actors[(len(actors) + 1) // 2:]
     for i, a in enumerate(actors): s.append(actor_node('a%d' % i, a))
-    s.append('subgraph cluster_sys { label="%s"; fontname="%s"; fontsize=12; color="#555555"; style=solid;' % (esc(title), FONT))
+    s.append('subgraph cluster_sys { label=<<B>%s</B>>; fontname="%s"; fontsize=12.5; fontcolor="%s"; style="rounded,filled"; fillcolor="%s"; color="%s"; penwidth=1.2; margin=16;'
+             % (hesc(title), FONT, T['ink'], T['boundary_fill'], T['boundary_line']))
     for j, u in enumerate(ucs):
-        s.append('u%d [shape=ellipse, style=filled, fillcolor="%s", color="%s", label="%s", width=2.2];' % (j, FILL, LINE, wl(u, 24)))
+        s.append('u%d [shape=ellipse, style=filled, fillcolor="%s", color="%s", fontcolor="%s", label="%s", width=2.2];' % (j, T['uc_fill'], T['uc_line'], T['ink'], wl(u, 24)))
     s.append('}')
     for (i, j) in edges:
         s.append(('a%d -> u%d;' if actors[i] in left else 'u%d -> a%d;') % ((i, j) if actors[i] in left else (j, i)))
@@ -347,13 +413,14 @@ def uc_dot(actors, ucs, edges, title):
 
 def context_dot(product, actors, systems):
     """systems: [(name, note)]"""
-    s = ['digraph G {', 'rankdir=LR; nodesep=0.35; ranksep=1.3; splines=true;', HEAD,
-         'sys [shape=box, style="rounded,filled,bold", fillcolor="%s", color="%s", penwidth=2, fontsize=13, label="%s", width=2.4, height=1.0];' % (FILL, LINE, wl(product, 20))]
+    s = ['digraph G {', 'rankdir=LR; nodesep=0.4; ranksep=1.4; splines=true;', head(),
+         'sys [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontcolor="%s", penwidth=2, fontsize=13.5, label=<<B>%s</B>>, width=2.6, height=1.1];'
+         % (T['primary'], T['primary'] if T['primary'] != '#FFFFCC' else T['node_line'], T['primary_ink'], hw(product, 20))]
     for i, a in enumerate(actors):
         s.append(actor_node('a%d' % i, a)); s.append('a%d -> sys [arrowhead=none];' % i)
     for j, (n, note) in enumerate(systems):
-        s.append('x%d [shape=box, style="rounded", color="#555555", label="%s", width=1.8];' % (j, wl(n, 22)))
-        s.append('sys -> x%d [dir=both, arrowsize=0.6%s];' % (j, ', label="%s"' % wl(note, 22) if note else ''))
+        s.append('x%d [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontcolor="%s", label="%s", width=1.9];' % (j, T['ext_fill'], T['ext_line'], T['ink'], wl(n, 22)))
+        s.append('sys -> x%d [dir=both, arrowtail=%s%s];' % (j, T['arrow'], ', label="%s"' % wl(note, 22) if note else ''))
     s.append('}')
     return '\n'.join(s)
 
@@ -364,17 +431,15 @@ def activity_dot(rows, alts=()):
         if a not in lanes: lanes.append(a)
     for _, _, a, _ in alts:
         if a not in lanes: lanes.append(a)
-    s = ['digraph G {', 'rankdir=TB; nodesep=0.3; ranksep=0.32; newrank=true; compound=true;', HEAD,
-         'node [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontsize=10];' % (FILL, LINE),
-         'start [shape=circle, label="", width=0.22, style=filled, fillcolor=black];',
-         'end [shape=doublecircle, label="", width=0.16, style=filled, fillcolor=black];']
-    tint = ['#F4F4F4', '#EAF4FB', '#FBF3EA', '#EEF8EE', '#F6EEF8']
+    s = ['digraph G {', 'rankdir=TB; nodesep=0.3; ranksep=0.34; newrank=true; compound=true;', head(),
+         box(extra=', fontsize=10')] + start_end()
     for li, lane in enumerate(lanes):
-        s.append('subgraph cluster_%d { label="%s"; fontname="%s"; fontsize=11; style="filled"; fillcolor="%s"; color="#777777";' % (li, esc(lane), FONT, tint[li % len(tint)]))
+        s.append('subgraph cluster_%d { %s' % (li, lane_style(li) % hesc(lane)))
         for k, (a, t, dsh) in enumerate(rows):
-            if a == lane: s.append('n%d [label="%s", width=2.6%s];' % (k, wl(t, 32), ', style="rounded,filled,dashed"' if dsh else ''))
+            if a == lane: s.append('n%d [label="%s", width=2.6%s];' % (k, wl(t, 32), (', ' + unv()) if dsh else ''))
         for k, (_, cond, a, t) in enumerate(alts):
-            if a == lane: s.append('x%d [label=<<FONT POINT-SIZE="9"><I>[%s]</I></FONT><BR/>%s>, width=2.4, style="rounded,dashed", fillcolor="white"];' % (k, hw(cond, 34), hw(t, 32)))
+            if a == lane: s.append('x%d [label=<<FONT POINT-SIZE="8.5" COLOR="%s"><B>%s</B></FONT><BR/>%s>, width=2.4, style="rounded,filled,dashed", fillcolor="%s", color="%s"];'
+                                   % (k, T['alt_ink'], hw(cond, 34), hw(t, 32), T['alt_fill'], T['alt_line']))
         if li == 0: s.append('start;')
         s.append('}')
     if rows:
@@ -382,9 +447,9 @@ def activity_dot(rows, alts=()):
         for k in range(len(rows) - 1): s.append('n%d -> n%d;' % (k, k + 1))
         s.append('n%d -> end;' % (len(rows) - 1))
     for k, (i, cond, _, _) in enumerate(alts):
-        s.append('d%d [shape=diamond, label="", width=0.3, height=0.3, style=filled, fillcolor=white];' % k)
-        s.append('n%d -> d%d [style=dashed, arrowhead=none];' % (min(i, len(rows) - 1), k))
-        s.append('d%d -> x%d [style=dashed];' % (k, k))
+        s.append('d%d [shape=diamond, label="", width=0.28, height=0.28, style=filled, fillcolor="%s", color="%s"];' % (k, T['alt_fill'], T['alt_line']))
+        s.append('n%d -> d%d [style=dashed, arrowhead=none, color="%s"];' % (min(i, len(rows) - 1), k, T['alt_line']))
+        s.append('d%d -> x%d [style=dashed, color="%s"];' % (k, k, T['alt_line']))
     s.append('}')
     return '\n'.join(s)
 
@@ -395,77 +460,93 @@ def state_dot(rows):
     def nid(x):
         if x not in ids: ids[x] = 's%d' % len(ids)
         return ids[x]
-    s = ['digraph G {', 'rankdir=TB; nodesep=0.5; ranksep=0.45;', HEAD,
-         'node [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontsize=10.5];' % (FILL, LINE),
-         'start [shape=circle, label="", width=0.2, style=filled, fillcolor=black];',
-         'end [shape=doublecircle, label="", width=0.15, style=filled, fillcolor=black];']
+    s = ['digraph G {', 'rankdir=TB; nodesep=0.55; ranksep=0.5;', head(),
+         box(T['primary_soft'], T['primary_line'], ', fontsize=11, fontcolor="%s", height=0.5' % T['ink'])] + start_end()
     edges = []; has_end = False
     for a, b, lab, dsh in rows:
         a0 = 'start' if (not a or START.match(a)) else nid(a)
         if b == '[*]': b0 = 'end'; has_end = True
         else: b0 = nid(b)
-        edges.append('%s -> %s [label="%s"%s];' % (a0, b0, wl(lab, 26), ', style=dashed' if dsh else ''))
-    for x, i in ids.items(): s.append('%s [label="%s"];' % (i, wl(x, 20)))
+        edges.append('%s -> %s [label="%s"%s];' % (a0, b0, wl(lab, 26), ', style=dashed, color="%s"' % T['unv_line'] if dsh else ''))
+    for x, i in ids.items(): s.append('%s [label=<<B>%s</B>>];' % (i, hw(x, 20)))
     if not has_end: s = [x for x in s if not x.startswith('end ')]
     s += edges; s.append('}')
     return '\n'.join(s)
 
 def sequence_dot(parts, msgs):
-    """parts: [name]; msgs: [(src, dst, label, dashed)] — lifelines drawn as dot columns"""
+    """parts: [name]; msgs: [(src, dst, label, dashed)] — fixed coordinates (neato -n2): straight lifelines and level arrows"""
     n = len(parts); P = {p: i for i, p in enumerate(parts)}
-    s = ['digraph G {', 'rankdir=TB; splines=false; nodesep=1.6; ranksep=0.32; newrank=true;', HEAD,
-         'node [shape=point, width=0.02, color="#888888"];']
-    s.append('{ rank=same; ' + ' '.join('p%d [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontsize=10.5, width=1.5, label="%s"];' % (i, FILL, LINE, wl(p, 18)) for i, p in enumerate(parts)) + ' }')
-    s.append(' '.join('p%d -> p%d [style=invis];' % (i, i + 1) for i in range(n - 1)))
-    rows = len(msgs) + 1
-    for r in range(rows):
-        s.append('{ rank=same; ' + ' '.join('m%d_%d;' % (r, i) for i in range(n)) + ' }')
-        s.append(' '.join('m%d_%d -> m%d_%d [style=invis];' % (r, i, r, i + 1) for i in range(n - 1)))
-    for i in range(n):
-        chain = ['p%d' % i] + ['m%d_%d' % (r, i) for r in range(rows)]
-        s.append(' -> '.join(chain) + ' [style=dashed, arrowhead=none, color="#999999"];')
+    longest = max([len(x) for _, _, lab, _ in msgs for x in wrap(lab, 26)] + [12])
+    W = max(150, int(longest * 5.6) + 50); STEP = 46; TOP = 0
+    act = T['primary'] if T['primary'] != '#FFFFCC' else T['edge']
+    s = ['// engine=neato', 'digraph G {', 'splines=line; outputorder=edgesfirst;', head(),
+         'node [shape=point, width=0.01, height=0.01, color="%s", label=""];' % T['edge_soft']]
+    ys = []; y = TOP - 48
+    for a_, b_, _, _ in msgs:
+        ys.append(y); y -= STEP + (24 if a_ == b_ else 0)
+    bottom = y + STEP - 30
+    for i, p in enumerate(parts):
+        x = i * W
+        s.append('p%d [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontcolor="%s", fontsize=10.5, width=1.45, height=0.42, label=<<B>%s</B>>, pos="%d,%d"];'
+                 % (i, T['primary_soft'], T['primary_line'], T['ink'], hw(p, 18), x, TOP))
+        s.append('b%d [pos="%d,%d"];' % (i, x, bottom))
+        s.append('p%d -> b%d [style=dashed, arrowhead=none, color="%s", penwidth=1.0];' % (i, i, T['edge_soft']))
     for r, (a, b, lab, dsh) in enumerate(msgs):
-        ia, ib = P[a], P[b]
+        y = ys[r]; ia, ib = P[a], P[b]; st = ', style=dashed' if dsh else ''
         if ia == ib:
-            s.append('m%d_%d -> m%d_%d [label="%s", constraint=false%s];' % (r, ia, r + 1, ia, wl(lab, 22), ', style=dashed' if dsh else ''))
+            x = ia * W
+            s.append('s%d_0 [pos="%d,%d"]; s%d_1 [pos="%d,%d"]; s%d_2 [pos="%d,%d"]; s%d_3 [pos="%d,%d"];' % (r, x, y, r, x + 34, y, r, x + 34, y - 22, r, x, y - 22))
+            s.append('s%d_0 -> s%d_1 [arrowhead=none, color="%s"%s]; s%d_1 -> s%d_2 [arrowhead=none, color="%s"%s]; s%d_2 -> s%d_3 [color="%s"%s];'
+                     % (r, r, act, st, r, r, act, st, r, r, act, st))
+            ln = wrap(lab, 22)
+            s.append('t%d [shape=box, style=filled, fillcolor=white, color=white, margin="0.03,0.01", width=0, height=0, fontsize=9.5, fontcolor="%s", label="%s", pos="%d,%d"];' % (r, T['text'], wl(lab, 22), x + 44 + 3 * max(len(l) for l in ln), y - 11))
         else:
-            s.append('m%d_%d -> m%d_%d [label="%s", constraint=false, arrowsize=0.7%s];' % (r, ia, r, ib, wl(lab, 26), ', style=dashed' if dsh else ''))
+            s.append('a%d [pos="%d,%d"]; c%d [pos="%d,%d"];' % (r, ia * W, y, r, ib * W, y))
+            s.append('a%d -> c%d [color="%s"%s];' % (r, r, act, st))
+            nl = len(wrap(lab, 26))
+            s.append('t%d [shape=box, style=filled, fillcolor=white, color=white, margin="0.03,0.01", width=0, height=0, fontsize=9.5, fontcolor="%s", label="%s", pos="%d,%d"];' % (r, T['text'], wl(lab, 26), (ia + ib) * W / 2, y + 5 + 6 * nl))
     s.append('}')
     return '\n'.join(s)
 
 def erd_dot(entities, rels):
     """entities: {name: [fields]}; rels: [(a, card_a, card_b, b, label)]"""
-    s = ['digraph G {', 'rankdir=LR; nodesep=0.5; ranksep=1.0; splines=true;', HEAD, 'node [shape=plain];']
+    s = ['digraph G {', 'rankdir=LR; nodesep=0.5; ranksep=1.0; splines=true;', head(), 'node [shape=plain];',
+         'edge [arrowhead=none, color="%s"];' % T['edge']]
     ids = {}
+    hdr_bg = T['primary'] if T['primary'] != '#FFFFCC' else T['node_fill']
     for k, (e, fields) in enumerate(entities.items()):
         ids[e] = 'e%d' % k
-        rows = ''.join('<TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5">%s</FONT></TD></TR>' % hesc(clean(f, 40)) for f in fields[:12])
-        if len(fields) > 12: rows += '<TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5">… +%d</FONT></TD></TR>' % (len(fields) - 12)
-        s.append('%s [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="%s">'
-                 '<TR><TD BGCOLOR="%s"><B>%s</B></TD></TR>%s</TABLE>>];' % (ids[e], LINE, FILL, hw(e, 24), rows))
+        rows = ''.join('<TR><TD ALIGN="LEFT" BGCOLOR="%s"><FONT POINT-SIZE="9.5" COLOR="%s">%s</FONT></TD></TR>'
+                       % (T['row_alt'] if i % 2 else '#FFFFFF', T['text'], hesc(clean(f, 40))) for i, f in enumerate(fields[:12]))
+        if len(fields) > 12: rows += '<TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="%s">… +%d</FONT></TD></TR>' % (T['muted'], len(fields) - 12)
+        s.append('%s [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="%s" STYLE="ROUNDED">'
+                 '<TR><TD BGCOLOR="%s"><FONT COLOR="%s"><B>%s</B></FONT></TD></TR>%s</TABLE>>];'
+                 % (ids[e], T['primary_line'], hdr_bg, T['primary_ink'], hw(e, 24), rows))
     for a, ca, cb, b, lab in rels:
-        s.append('%s -> %s [arrowhead=none, taillabel="%s", headlabel="%s", label="%s", labeldistance=1.6];' % (ids[a], ids[b], esc(ca), esc(cb), wl(lab, 20)))
+        s.append('%s -> %s [taillabel="%s", headlabel="%s", label="%s", labeldistance=1.6, labelfontcolor="%s"];' % (ids[a], ids[b], esc(ca), esc(cb), wl(lab, 20), T['primary'] if T['primary'] != '#FFFFCC' else T['ink']))
     s.append('}')
     return '\n'.join(s)
 
 def tree_dot(root, groups):
     """screen map: root -> group -> leaves; groups: [(group, [leaf])]"""
-    s = ['digraph G {', 'rankdir=LR; nodesep=0.12; ranksep=0.6;', HEAD,
-         'node [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontsize=10];' % (FILL, LINE),
-         'r [label="%s", style="rounded,filled,bold", fontsize=12];' % wl(root, 18)]
+    s = ['digraph G {', 'rankdir=LR; nodesep=0.12; ranksep=0.7; splines=true;', head(), box(extra=', fontsize=10'),
+         'edge [arrowhead=none, color="%s"];' % T['edge_soft'],
+         'r [label=<<B>%s</B>>, fillcolor="%s", color="%s", fontcolor="%s", fontsize=12];' % (hw(root, 18), T['primary'] if T['primary'] != '#FFFFCC' else T['node_fill'], T['primary'] if T['primary'] != '#FFFFCC' else T['node_line'], T['primary_ink'])]
     k = 0
     for gi, (g, leaves) in enumerate(groups):
-        s.append('g%d [label="%s", fillcolor="#EAF4FB"];' % (gi, wl(g, 22))); s.append('r -> g%d;' % gi)
+        bg, bd, ti = T['lanes'][gi % len(T['lanes'])]
+        s.append('g%d [label=<<B>%s</B>>, fillcolor="%s", color="%s", fontcolor="%s"];' % (gi, hw(g, 22), bg, bd, ti)); s.append('r -> g%d;' % gi)
         for lf in leaves:
-            s.append('l%d [label="%s", fillcolor="white"];' % (k, wl(lf, 30))); s.append('g%d -> l%d;' % (gi, k)); k += 1
+            s.append('l%d [label="%s", fillcolor="white", color="%s"];' % (k, wl(lf, 30), bd)); s.append('g%d -> l%d;' % (gi, k)); k += 1
     s.append('}')
     return '\n'.join(s)
 
 def linkmap_dot(mods, edges):
     """module-level link map. mods: [(num, name, [(fid, fname)])]; edges: [(fid_a, fid_b)] grouped per module pair"""
-    s = ['digraph G {', 'rankdir=LR; nodesep=0.35; ranksep=0.9;', HEAD,
-         'node [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontsize=10.5];' % (FILL, LINE)]
-    for num, name, feats in mods: s.append('m%d [label="%s"];' % (num, wl('%d. %s' % (num, name), 20)))
+    s = ['digraph G {', 'rankdir=LR; nodesep=0.4; ranksep=1.0;', head(), box(extra=', fontsize=10.5')]
+    for k, (num, name, feats) in enumerate(mods):
+        bg, bd, ti = T['lanes'][k % len(T['lanes'])]
+        s.append('m%d [label=<<B>%s</B>>, fillcolor="%s", color="%s", fontcolor="%s"];' % (num, hw('%d. %s' % (num, name), 20), bg, bd, ti))
     pairs = collections.OrderedDict()
     own = {fid: num for num, _, feats in mods for fid, _ in feats}
     for a, b in edges:
@@ -474,18 +555,20 @@ def linkmap_dot(mods, edges):
         pairs.setdefault((ma, mb), []).append('%s→%s' % (a, b))
     for (ma, mb), lst in pairs.items():
         lab = ', '.join(lst) if len(lst) <= 2 else '%d' % len(lst)
-        s.append('m%d -> m%d [label="%s", fontsize=8.5, penwidth=%.1f, arrowsize=0.7];' % (ma, mb, wl(lab, 18), min(3.0, 0.8 + 0.3 * len(lst))))
+        s.append('m%d -> m%d [label="%s", fontsize=8.5, penwidth=%.1f];' % (ma, mb, wl(lab, 18), min(3.0, 0.9 + 0.3 * len(lst))))
     s.append('}')
     return '\n'.join(s)
 
 def timeline_dot(points):
-    s = ['digraph G {', 'rankdir=LR; nodesep=0.3; ranksep=0.5;', HEAD,
-         'node [shape=box, style="rounded,filled", fillcolor="%s", color="%s", fontsize=10];' % (FILL, LINE)]
+    s = ['digraph G {', 'rankdir=LR; nodesep=0.3; ranksep=0.45;', head(), box(T['primary_soft'], T['primary_line'], ', fontsize=10'),
+         'edge [color="%s", penwidth=2.2, arrowhead=none];' % (T['primary_line'])]
     for k, (when, what) in enumerate(points):
-        s.append('t%d [label="%s\\n%s"];' % (k, esc(when), wl(what, 20)))
+        s.append('t%d [label=<<FONT COLOR="%s"><B>%s</B></FONT><BR/>%s>];' % (k, T['primary'] if T['primary'] != '#FFFFCC' else T['ink'], hesc(when), hw(what, 20)))
         if k: s.append('t%d -> t%d;' % (k - 1, k))
     s.append('}')
     return '\n'.join(s)
+
+set_theme('modern')
 
 # ------------------------------------------------------------------ block parsers (syntax: references/diagrams.md)
 ARROW = re.compile(r'^(.+?)\s*(-->|->)\s*(.+?)\s*(?::\s*(.*))?$')
