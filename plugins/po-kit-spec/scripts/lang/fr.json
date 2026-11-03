@@ -211,7 +211,7 @@
     "r_trigger": "Déclencheur",
     "r_pre": "Préconditions",
     "r_post": "Postconditions",
-    "r_status": "Statut de développement",
+    "r_status": "Statut actuel",
     "r_main": "Flux d'événements principal (succès)",
     "r_alt": "Flux d'événements alternatif",
     "none": "Aucun",

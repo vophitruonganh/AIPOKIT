@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Coverage gate: checks the Phase 1 inventory (references/coverage-rules.md) and, with --md, that the spec covers it.
 Usage: inventory_check.py <inventory.md> [--md <md_dir>] [--csv out.csv]
+       inventory_check.py <inventory.md> --slice <N or N.M>   print only the header and the rows of that module or feature
+       (a writer or verifier reads its slice instead of the whole inventory)
 Checks:
   - table header has ID | Screen | Path | Kind | Label | Role | Status | Feature
   - every row: unique ID, known Kind, valid Status (no "Not explored"; "Removed: <version>" keeps the id of an element gone from the app), Feature = N.M or "global"
@@ -45,6 +47,17 @@ def sections(md_dir):
 def main():
     if len(sys.argv) < 2: print(__doc__); sys.exit(2)
     inv = sys.argv[1]; md = out = None
+    if '--slice' in sys.argv:
+        want = sys.argv[sys.argv.index('--slice') + 1]; hdr = None
+        for line in open(inv, encoding='utf-8'):
+            if not line.startswith('|'): continue
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            if hdr is None:
+                if [norm(c) for c in cells[:8]] == COLS: hdr = line; print(line.rstrip()); print('| ' + ' | '.join(['---'] * 8) + ' |')
+                continue
+            f = cells[7] if len(cells) > 7 else ''
+            if f == want or f.startswith(want + '.') or (want == 'global' and f == 'global'): print(line.rstrip())
+        sys.exit(0)
     if '--md' in sys.argv: md = sys.argv[sys.argv.index('--md') + 1]
     if '--csv' in sys.argv: out = sys.argv[sys.argv.index('--csv') + 1]
     header, rows = read_rows(inv)

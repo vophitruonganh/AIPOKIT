@@ -43,7 +43,10 @@
     "review": 40,
     "verify": 30,
     "export": 5,
-    "translate": 10
+    "translate": 10,
+    "diagram": 30,
+    "fix": 10,
+    "reword": 35
   },
   "weights": {
     "screens": 1.5,

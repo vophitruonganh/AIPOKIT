@@ -4,7 +4,7 @@ Module file `N-name.md`:
 # N. Module name
 ## Summary                       (first paragraph = module description)
 ## Roles & permissions           (table: Role | Can do | Cannot do)
-## Feature map                   (table: # | Feature | Screen | Main role | Status on dev)
+## Feature map                   (table: # | Feature | Screen | Main role | Status)
 ## N.M Feature name `route`      (one per feature, all blocks)
 ## Appendix A — Integration & API   (B data model, C not visible)
 ```

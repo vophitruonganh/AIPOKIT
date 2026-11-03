@@ -1,4 +1,4 @@
-# po-kit-spec (Claude Code plugin, part of AIPOKIT) v1.5.0
+# po-kit-spec (Claude Code plugin, part of AIPOKIT) v1.8.0
 Reverse-engineer any running website, web app or mobile app into a verified, labelled product spec, then export it as an IEEE-830 style SRS (Word/PDF) in the language or template you choose. Nothing in the plugin is tied to one product: it works from visible labels, roles and routes.
 
 ## Install
@@ -46,6 +46,9 @@ Recon writes `inventory.new.md`; `scripts/inventory_diff.py inventory.md invento
 
 ## Languages
 Everything the model reads is English. The spec uses canonical English headings and labels, in any content language. The exported document language is `lang` in `config.json`; `spec_lang` is the language of the spec text.
+
+## Fast recon (headless browser runner)
+On the computer that can open the app: `bash scripts/browser/setup-browser.sh` (Windows: `scripts/browser/setup-browser.ps1`), then `node scripts/browser/pokit-browser.mjs login --url <app>` (you sign in yourself, once), `calibrate --url <app page>`, and `doctor --url <app>` must say Ready. The agents then run whole modules in parallel without a model turn per click. Details: `skills/reverse-spec-builder/references/browser-runner.md`.
 
 ## SRS export environment
 Python 3 (python-docx, pymupdf, Pillow, openpyxl), Graphviz, LibreOffice, Liberation fonts. Check with `bash scripts/check_env.sh` (lists everything missing), install with `/po-kit-spec:setup` or `bash scripts/setup.sh` (apt on Linux, Homebrew on macOS; Python modules always go to a private venv `~/.po-kit/venv`, which the scripts switch to by themselves). Cloud sessions already have them.

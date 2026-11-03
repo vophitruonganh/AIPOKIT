@@ -438,6 +438,12 @@ def svg_post(svg):
 def render(dot_src, out_dir, name):
     os.makedirs(out_dir, exist_ok=True)
     p = os.path.join(out_dir, name)
+    import hashlib
+    key = hashlib.sha1((dot_src + json.dumps(T, sort_keys=True, default=str)).encode('utf-8')).hexdigest()
+    cache = os.path.join(out_dir, '.cache', key)   # same figure as in an earlier build: reuse it (the build loop renders every figure 2-4 times otherwise)
+    if os.path.exists(cache + '.png') and os.path.exists(cache + '.svg'):
+        import shutil
+        shutil.copyfile(cache + '.png', p + '.png'); shutil.copyfile(cache + '.svg', p + '.svg'); return p + '.png'
     open(p + '.dot', 'w', encoding='utf-8').write(dot_src)
     eng = (['neato', '-n2'] if dot_src.startswith('// engine=neato\n') else ['neato'] if dot_src.startswith('// engine=force') else ['dot'])
     for extra in ([], ['-Gsplines=polyline'], ['-Gsplines=line']):   # graphviz routing can fail on dense clusters
@@ -449,9 +455,16 @@ def render(dot_src, out_dir, name):
     sh = _shooter()
     if sh:
         sh.stdin.write(json.dumps({'svg': p + '.svg', 'png': p + '.png', 'scale': 2.4}) + '\n'); sh.stdin.flush()
-        if sh.stdout.readline().strip() == 'ok': return p + '.png'
+        if sh.stdout.readline().strip() == 'ok':
+            _keep(p, cache); return p + '.png'
     subprocess.run(eng + ['-Tpng', '-Gdpi=170'] + extra + ['-o', p + '.png', p + '.dot'], check=True, capture_output=True)
+    _keep(p, cache)
     return p + '.png'
+
+def _keep(p, cache):
+    import shutil
+    os.makedirs(os.path.dirname(cache), exist_ok=True)
+    shutil.copyfile(p + '.png', cache + '.png'); shutil.copyfile(p + '.svg', cache + '.svg')
 
 def head(splines=None):
     """graph-wide defaults of the current theme"""
@@ -464,14 +477,14 @@ def head(splines=None):
 def acc(i): return T['accents'][i % len(T['accents'])]
 def lbr(s, n): return hw(s, n).replace('<BR/>', '<BR ALIGN="LEFT"/>') + '<BR ALIGN="LEFT"/>'
 
-def card(nid, text, n=30, num=None, color=None, border=None, fill='#FFFFFF', top=None, top_color=None, bold=False, extra=''):
+def card(nid, text, n=30, num=None, color=None, border=None, fill='#FFFFFF', top=None, top_color=None, bold=False, extra='', pad=7):
     """white rounded card (HTML label); optional step number on the left and a small coloured line on top"""
     body = lbr(text, n)
     if bold: body = '<B>%s</B>' % body
     if top: body = '<FONT POINT-SIZE="8.5" COLOR="%s"><B>%s</B></FONT><BR ALIGN="LEFT"/>%s' % (top_color or T['alt_ink'], lbr(top, n)[:-len('<BR ALIGN="LEFT"/>')], body)
     numcell = '<TD VALIGN="MIDDLE"><FONT COLOR="%s" POINT-SIZE="9.5"><B>%s</B></FONT></TD>' % (color or acc(0), num) if num is not None else ''
-    return ('%s [shape=plain, class="card", label=<<TABLE BORDER="1" COLOR="%s" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="%s" STYLE="rounded">'
-            '<TR>%s<TD ALIGN="LEFT" BALIGN="LEFT">%s</TD></TR></TABLE>>%s];' % (nid, border or T['card_line'], fill, numcell, body, extra))
+    return ('%s [shape=plain, class="card", label=<<TABLE BORDER="1" COLOR="%s" CELLBORDER="0" CELLSPACING="0" CELLPADDING="%d" BGCOLOR="%s" STYLE="rounded">'
+            '<TR>%s<TD ALIGN="LEFT" BALIGN="LEFT">%s</TD></TR></TABLE>>%s];' % (nid, border or T['card_line'], pad, fill, numcell, body, extra))
 
 def pill(text, color):
     return ('<<TABLE BORDER="0" CELLPADDING="5" CELLSPACING="0" BGCOLOR="%s" STYLE="rounded"><TR><TD><FONT COLOR="white" POINT-SIZE="10.5"><B>%s</B></FONT></TD></TR></TABLE>>'
@@ -546,16 +559,16 @@ def activity_dot(rows, alts=()):
         if a not in lanes: lanes.append(a)
     groups = collections.OrderedDict()
     for k, (i, cond, a, t) in enumerate(alts): groups.setdefault(min(i, len(rows) - 1), []).append((k, cond))
-    s = ['digraph G {', 'rankdir=TB; nodesep=0.4; ranksep=0.42; newrank=true; compound=true; forcelabels=true;', head()] + start_end()
+    s = ['digraph G {', 'rankdir=TB; nodesep=0.3; ranksep=0.28; newrank=true; compound=true; forcelabels=true;', head()] + start_end()
     for li, ln in enumerate(lanes):
         s.append(lane(li, ln, acc(li)))
         for k, (a, t, dsh) in enumerate(rows):
             if a == ln:
-                s.append(card('n%d' % k, t, 30, num=k + 1, color=acc(li), border=T['unv_line'] if dsh else None))
+                s.append(card('n%d' % k, t, 30, num=k + 1, color=acc(li), border=T['unv_line'] if dsh else None, pad=4))
                 if k in groups:   # the decision node sits in the lane of the step it follows
                     s.append('d%d [shape=diamond, label="", width=0.32, height=0.32, style=filled, fillcolor="white", color="%s", penwidth=1.4, class="card"];' % (k, T['alt_ink']))
         for k, (_, cond, a, t) in enumerate(alts):
-            if a == ln: s.append(card('x%d' % k, t, 30, fill=T['alt_fill'], border=T['alt_line']))
+            if a == ln: s.append(card('x%d' % k, t, 30, fill=T['alt_fill'], border=T['alt_line'], pad=4))
         if li == 0: s.append('start;')
         s.append('}')
     guard = lambda c: hesc('[' + clean(c, 40) + ']')

@@ -52,6 +52,8 @@ DOC_STYLES = {
 DS = dict(DOC_STYLES.get(CFG.get('doc_style') or ('legacy' if CLASSIC else 'slate'), DOC_STYLES['slate']))
 if CFG.get('doc_font'): DS['font'] = CFG['doc_font']
 FONT = DS['font']
+# where the permission details are when config has no `uc_permissions` (a use case list)
+PERM_REF = {'vi': 'bảng "Phân quyền theo hành động" của từng use case', 'fr': 'le tableau des droits par action de chaque cas d\'utilisation'}.get(CFG.get('lang', 'en'), 'the "Permissions by action" table of each use case')
 GREEN = DS['label']; ORANGE = DS['head']; LIGHT = 'E8F7F0'
 def _rgb(h): return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 TEXT_W = 16.0  # cm
@@ -127,8 +129,26 @@ def runs(par, text, bold=False, italic=False, size=None):
         pos = m.end()
     if pos < len(text): _run(par, text[pos:], bold, italic, size)
 
+# source tags and survey words the author writes in English; a Vietnamese document shows them in Vietnamese
+TAG_VI = [(r'(?:Cần xác nhận|Open questions) & assumptions', 'Cần xác nhận & giả định'), (r'Inferred from code', 'suy từ mã'), (r'Inferred from API', 'suy từ API'), (r'Inferred(?! from)', 'suy luận'),
+          (r'\(Safety-blocked\)', '(chưa xác nhận, có tác động thật)'), (r'Safety-blocked:\s*', 'chưa xác nhận, có tác động thật: '), (r'Safety-blocked', 'chưa xác nhận, có tác động thật'), (r'Needs role', 'cần vai trò khác'), (r'Needs data', 'cần dữ liệu'),
+          (r'real-world effect', 'có tác động thật'), (r'other role needed', 'cần vai trò khác'),
+          (r'Product/Legal decision', 'cần Product và Pháp chế quyết định'), (r'Product/Marketing decision', 'cần Product và Marketing quyết định'),
+          (r'Product decision', 'cần Product quyết định'), (r'Eng decision', 'cần kỹ thuật quyết định'), (r'Legal decision', 'cần Pháp chế quyết định'),
+          (r'\bWorks\b', 'Hoạt động'), (r'\bBroken\b', 'lỗi'), (r'\bNot built\b', 'Chưa có'),
+          (r'Empty / loading', 'Trống / đang tải'), (r'Load error', 'Lỗi tải'), (r'No permission', 'Không có quyền'),
+          (r'Paging, sort, filters, search', 'Phân trang, sắp xếp, lọc, tìm kiếm'), (r'Paging, sort, filters', 'Phân trang, sắp xếp, lọc'),
+          (r'Default sort', 'Sắp xếp mặc định'), (r'Filters / search', 'Lọc / tìm kiếm'), (r'\bPaging\b', 'Phân trang'),
+          (r'\bEmpty\b', 'Trống'), (r'Not applicable', 'Không áp dụng'),
+          (r'\bUnknown\b', 'Chưa rõ'), (r'(?<![\w-])Yes(?![\w-])', 'Có'), (r'(?<![\w-])No(?![\w.-])', 'Không')]
+def loc_tags(t):
+    if not VI_DOC: return t
+    for a, b in TAG_VI: t = re.sub(a, b, t)
+    return t
+
 def _run(par, t, bold, italic, size, mono=False, link=None):
     t = unesc(t)
+    if not mono or re.fullmatch(r'(?:Needs role|Needs data|Inferred from code|Inferred from API|Safety-blocked)(?::.*)?', t.strip()): t = loc_tags(t)
     parts = t.split('\n')
     for k, s in enumerate(parts):
         r = par.add_run(s)
@@ -238,8 +258,10 @@ def bookmark(p, name):
 
 HEADINGS = []   # (level, text)
 HEAD_BM = []    # bookmark name per heading, same order
+_HEAD_BREAKS = set(PAGES.get('heading_breaks', []))
 def heading(text, level):
     p = _heading(text, level); name = '_Toc_h%d' % len(HEAD_BM)
+    if re.sub(r'\s+', ' ', text).strip() in _HEAD_BREAKS: p.paragraph_format.page_break_before = True   # was left alone at a page bottom
     bookmark(p, name); HEAD_BM.append(name); return p
 def _heading(text, level):
     if CLASSIC and re.match(r'^\d+(\.\d+)*\s', text):   # classic template: number, tab, title
@@ -256,7 +278,7 @@ COUNT = {}
 def caption(kind, chap, title):
     k = (kind, chap); COUNT[k] = COUNT.get(k, 0) + 1
     if CLASSIC: title = re.sub(r'"([^"]*)"', '\u201c\\1\u201d', title)
-    label = '%s %d-%d: %s' % (kind, chap, COUNT[k], title)
+    label = '%s %d-%d: %s' % (kind, chap, COUNT[k], loc_tags(title))
     CAPTIONS[kind].append(label)
     _cp = _caption_par(label)
     bookmark(_cp, CAP_BM.setdefault(label, '_Toc_c%d' % len(CAP_BM)))
@@ -275,9 +297,13 @@ def generic_table(rows, chap=None, title=None, widths=None, size=10.5, header=Tr
     if not rows: return
     ncol = max(len(r) for r in rows)
     rows = [r + [''] * (ncol - len(r)) for r in rows]
+    if widths is None and header and len(rows) > 2:   # a column with no value in any row (e.g. an unfilled due date) is left out
+        keep = [j for j in range(ncol) if any(plain(r[j]).strip() not in ('', '—', '-') for r in rows[1:])]
+        if 0 < len(keep) < ncol: rows = [[r[j] for j in keep] for r in rows]; ncol = len(keep)
     t = doc.add_table(rows=len(rows), cols=ncol); set_borders(t)
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
-    if widths is None: widths = auto_widths(rows)
+    if ncol >= 7 and widths is None: size = min(size, 9)          # dense table: smaller text so every column fits its longest word
+    if widths is None: widths = auto_widths(rows, size=size)
     for i, r in enumerate(rows):
         for j, c in enumerate(r):
             cl = t.cell(i, j)
@@ -291,15 +317,27 @@ def generic_table(rows, chap=None, title=None, widths=None, size=10.5, header=Tr
     else: para('', space_after=2)
     return t
 
-def auto_widths(rows, total=TEXT_W):
+def auto_widths(rows, total=TEXT_W, size=10.5):
+    """Column widths: every column fits its longest word (no mid-word breaks), the rest of the width
+    goes to the columns with the most text (typical length, not the single longest cell)."""
     ncol = len(rows[0])
-    lens = [max(min(len(plain(r[j])), 120) for r in rows) + 4 for j in range(ncol)]
-    lens = [max(l, 8) for l in lens]
-    s = sum(lens); w = [total * l / s for l in lens]
-    # a column never gets narrower than its longest word (header or cell), so words do not break mid-word
-    mins = [max(1.6, 0.26 * min(max((len(x) for r in rows for x in plain(r[j]).split()), default=1), 12) + 0.7) for j in range(ncol)]
-    w = [max(x, m) for x, m in zip(w, mins)]; s = sum(w)
-    return [x * total / s for x in w]
+    def typical(j):
+        ls = sorted(len(plain(r[j])) for r in rows[1:] or rows)
+        return max(ls[int(len(ls) * 0.75)] if ls else 1, len(plain(rows[0][j])) * 0.6, 4)
+    want = [min(typical(j), 200) ** 0.6 for j in range(ncol)]
+    def longest(j):   # paths and code break at "/" or "_", so they do not set the minimum
+        ws = [x for r in rows for x in plain(r[j]).split() if not re.search(r'[/_`=?]', x)]
+        return max((len(x) for x in ws), default=1)
+    mins = [max(1.0, 0.25 * size / 10.5 * min(longest(j), 12) + 0.45) for j in range(ncol)]
+    if sum(mins) >= total: return [m * total / sum(mins) for m in mins]
+    fixed = [False] * ncol
+    while True:   # water filling: a column below its minimum is fixed at the minimum, the rest share what is left
+        free = total - sum(m for m, f in zip(mins, fixed) if f)
+        ws = sum(w for w, f in zip(want, fixed) if not f)
+        w = [mins[j] if fixed[j] else free * want[j] / ws for j in range(ncol)]
+        low = [j for j in range(ncol) if not fixed[j] and w[j] < mins[j]]
+        if not low: return w
+        for j in low: fixed[j] = True
 
 def render_blocks(blocks, chap=None, cap_tables=False, cap_prefix=''):
     for b in blocks:
@@ -499,7 +537,14 @@ print('diagram style: %s' % _src, file=sys.stderr)
 DSPEC = D.load_spec(MD, FILES)
 PLAN = D.plan(DSPEC, CFG)
 def want(t, scope='doc'): return D.wanted(PLAN, t, scope)
-def dot_render(src_dot, name): return D.render(src_dot, IMG, name)
+def dot_render(src_dot, name):
+    png = D.render(src_dot, IMG, name)
+    m = re.search(r'rankdir=(TB|LR)', src_dot)
+    if m and not name.startswith('act_') and _text_pt(png) < 6.5:   # too tall or too wide: try the other direction
+        alt = D.render(src_dot.replace(m.group(0), 'rankdir=' + ('LR' if m.group(1) == 'TB' else 'TB'), 1), IMG, name + '_rot')
+        if _text_pt(alt) > _text_pt(png) + 0.5: return alt
+        png = D.render(src_dot, IMG, name)   # back to the first one (same name on disk)
+    return png
 esc = D.esc
 def wrap(s, n=22): return D.wl(s, n)
 
@@ -507,8 +552,27 @@ def uc_diagram(name, actors, ucs, edges, title):
     return dot_render(D.uc_dot(actors, ucs, edges, title), name)
 
 def activity_diagram(name, rows, lanes_order, alts=()):
-    rws = [(a, D.clean(plain(t).split('\n')[0], 110), bool(D.UNVERIFIED.search(t))) for a, t in rows]
-    return dot_render(D.activity_dot(rws, alts), name)
+    def short(t, n):   # the step's first clause, at most n characters (the full text is in the use case table)
+        t = D.clean(plain(t).split('\n')[0]); first = re.split(r';\s+', t)[0]
+        return D.clean(first if len(first) >= 25 else t, n)
+    alts = list(alts)
+    for n in (110, 70, 50):
+        rws = [(a, short(t, n), bool(D.UNVERIFIED.search(t))) for a, t in rows]
+        png = dot_render(D.activity_dot(rws, alts), name)
+        if _text_pt(png) >= 7: return png
+    for k in sorted({len(alts), min(len(alts), 4), min(len(alts), 2), 0}, reverse=True):
+        png = dot_render(D.activity_dot(rws, alts[:k]), name)
+        if _text_pt(png) >= 7 or k == 0: break   # too many branches shrink the text below 7 pt: draw fewer, the table lists them all
+    return png
+
+def _text_pt(png, width=15.5, height=22.5):
+    """size of 10.5 pt diagram text once the figure is fitted on the page (svg points read from the .svg next to the png)"""
+    try:
+        head = open(png[:-4] + '.svg', encoding='utf-8').read(600)
+        w, h = (float(x) for x in re.search(r'width="([\d.]+)pt" height="([\d.]+)pt"', head).groups())
+    except Exception: return 99
+    wcm, hcm = w / 72 * 2.54, h / 72 * 2.54
+    return 10.5 * min(1, width / wcm, height / hcm)
 
 def state_diagram(name, lc):
     """config lifecycle: {states: {id: label}, edges: [[from,to,label,dashed?]], end: [ids]}"""
@@ -517,12 +581,14 @@ def state_diagram(name, lc):
     rows += [(lab.get(x, x), '[*]', '', False) for x in lc.get('end', [])]
     return dot_render(D.state_dot(rows), name)
 
+SMALL_TEXT = []
 def figure(path, chap, title, width=15.5):
     p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     from PIL import Image
     w, h = Image.open(path).size
     wcm = min(width, w / 170 * 2.54); hcm = wcm * h / w
-    if hcm > 21: wcm = wcm * 21 / hcm
+    if hcm > 22.5: wcm = wcm * 22.5 / hcm
+    if _text_pt(path) < 6: SMALL_TEXT.append((title, round(_text_pt(path), 1)))
     p.add_run().add_picture(path, width=Cm(wcm)); p.paragraph_format.keep_with_next = True
     caption(SR['fig'], chap, title)
 
@@ -674,7 +740,8 @@ if CLASSIC:
     para(('Hệ thống gồm có các tác nhân là %s. ' if VI else 'The system has the actors %s. ') % _lst +
          ' '.join('%s: %s.' % (plain(r[0]), (lambda s: s if s[1:2].isupper() else s[:1].lower() + s[1:])(plain(r[1]))) for r in _rr))
 else:
-    para(S('actors_intro', CFG['uc_permissions'], CFG['external_actors_note']))
+    _pr = CFG.get('uc_permissions') or ''
+    para(S('actors_intro', _pr or '\x00', CFG['external_actors_note']).replace('use case \x00', PERM_REF).replace('\x00', PERM_REF))
     for b in OVK('roles'):
         if b[0] == 'table':
             generic_table(b[1], 2, S('actors_title'), widths=[4.2, 7.8, 4.0]); break
@@ -1003,7 +1070,7 @@ for k, m in enumerate(modules):
                     continue
             if lab == '_':
                 render_blocks(bl); continue
-            name = PK['rename'].get(key, lab)
+            name = PK['rename'].get(key) or PK.get('blocks', {}).get(key) or lab   # block headings in the document language
             p = para(name + ('. ' if intro else ''), bold=True, italic=True, space_after=4)
             p.paragraph_format.keep_with_next = True
             if intro: runs(p, intro)
@@ -1020,7 +1087,7 @@ def perm_matrix():
     for mm in DSPEC['modules']:
         for f in mm['features']:
             rr = [D.clean(x).lower() for x in (mm['map'].get(f['id'], {}).get('roles') or [])]
-            rows.append([f['id'] + ' ' + f['name']] + ['✓' if any(r.lower() in x or x in r.lower() for x in rr) else '' for r in roles])
+            rows.append([f['id'] + ' ' + f['name']] + ['✓' if any(r.lower() in x or x in r.lower() for x in rr) else '—' for r in roles])
     if len(rows) < 2: return
     para(S('perm_intro'))
     w = max(1.6, min(3.0, 9.0 / max(1, len(roles))))
@@ -1066,7 +1133,7 @@ if CLASSIC:
         if b[0] == 'ul':
             for it, _ in b[1]: bullet(it)
         elif b[0] == 'p': para(b[1])
-    para(S('perm_para') + CFG['uc_permissions'] + '.')
+    para(S('perm_para') + (CFG.get('uc_permissions') or PERM_REF) + '.')
     perm_matrix()
     heading(S('h3_3'), 2)
     for t_ in CFG['constraints'] + CFG.get('dependencies', []) + CFG.get('assumptions', []): bullet(t_)
@@ -1091,7 +1158,7 @@ for b in ([] if CLASSIC else OVK('compliance')):
     if b[0] == 'table': generic_table(b[1], 3, S('legal_title'), widths=[3.4, 3.4, 5.2, 4.0], size=10)
     else: render_blocks([b])
 if not CLASSIC:
-    para(S('perm_para') + CFG['uc_permissions'] + (', ' + CFG['audit_note'] if CFG.get('audit_note') else '') + '.')
+    para(S('perm_para') + (CFG.get('uc_permissions') or PERM_REF) + (', ' + CFG['audit_note'] if CFG.get('audit_note') else '') + '.')
     perm_matrix()
 
     heading(S('h3_3'), 2)
@@ -1125,7 +1192,7 @@ if not CLASSIC:
         else: render_blocks([b])
     heading(S('h4_2'), 2)
     for b in OVK('gaps'):
-        if b[0] == 'table': generic_table(b[1], 4, S('h4_2_title'), widths=[0.9, 10.1, 1.8, 3.2], size=10)
+        if b[0] == 'table': generic_table(b[1], 4, S('h4_2_title'), size=10)
         else: render_blocks([b])
     for k, m in enumerate(modules):
         heading(S('h4_n', k + 3, m['name']), 2)
@@ -1156,9 +1223,85 @@ for kind in (SR['fig'], SR['tbl']):
     sp = doc.add_paragraph(); lof.append(sp)
 move_after(lof_anchor, lof)
 
+
+# ---- page layout pass: rows never break across pages, short tables stay on one page,
+#      a use case table keeps its first rows together (and with the heading/caption before it)
+def _xtext(el):   # visible text of an XML element (w:t only; itertext repeats text on these elements)
+    return ''.join(x.text or '' for x in el.iter(qn('w:t')))
+
+def _est_height(tb):
+    """rough rendered height of a table in cm, from text length and column widths (10 pt text)"""
+    grid = [int(g.get(qn('w:w')) or 0) / 567 for g in tb._tbl.findall(qn('w:tblGrid') + '/' + qn('w:gridCol'))] or [16.0]
+    h = 0.0
+    for r in tb.rows:
+        tcs = r._tr.tc_lst; lines = 1
+        for k, tc in enumerate(tcs):
+            w = grid[k] if k < len(grid) else grid[-1]
+            span = tc.find('.//' + qn('w:gridSpan'))
+            if span is not None: w = sum(grid[k:k + int(span.get(qn('w:val')))])
+            txt = _xtext(tc)
+            lines = max(lines, sum(1 + int(len(p) / max(1.0, (w - 0.4) * 5.2)) for p in txt.split('\n')))
+        h += lines * 0.45 + 0.2
+    return h
+
+def _layout_tables(tables):
+    for tb in tables:
+        rows = tb.rows
+        for r in rows:
+            # a short row never breaks; a tall row (nested flow table, long text) may continue on the next page,
+            # otherwise it leaves half a page empty
+            tall = r._tr.find('.//' + qn('w:tbl')) is not None or len(_xtext(r._tr)) > 700
+            trPr = r._tr.get_or_add_trPr(); cs = trPr.find(qn('w:cantSplit'))
+            if tall and cs is not None: trPr.remove(cs)
+            elif not tall and cs is None: trPr.append(OxmlElement('w:cantSplit'))
+        first = rows[0].cells[0].text.strip() if len(rows) else ''
+        if len(rows) > 8 and first != S('r_code'):
+            trPr = rows[0]._tr.get_or_add_trPr()
+            if trPr.find(qn('w:tblHeader')) is None: trPr.append(OxmlElement('w:tblHeader'))
+        keep = len(rows) - 1 if len(rows) <= 8 else (5 if first == S('r_code') else 1)
+        if len(rows) <= 8 and _est_height(tb) > 9.0: keep = 2   # a short but tall table may split; the header stays with the first rows
+        for r in rows[:keep]:
+            for c in r.cells:
+                for p in c.paragraphs: p.paragraph_format.keep_with_next = True
+        for r in rows:
+            for c in r.cells: _layout_tables(c.tables)
+_layout_tables(doc.tables)
+# short tables split by the renderer in the previous run (pages.py): start them on a new page
+_tb_breaks = set(PAGES.get('table_breaks', []))
+if _tb_breaks:
+    _seen = collections.Counter()
+    for _tb in doc.tables:
+        if len(_tb.rows) < 2: continue
+        _k = ''.join(sorted(re.sub(r'\W', '', ''.join(_xtext(tc) for tc in _tb.rows[1]._tr.tc_lst))))   # letters of the first data row
+        _k += '#%d' % _seen[_k]; _seen[_k.rsplit('#', 1)[0]] += 1   # nth table with this first row (field tables often start alike)
+        if _k not in _tb_breaks: continue
+        _prev = _tb._tbl.getprevious()
+        # move back over the caption / label lines that belong to the table
+        while _prev is not None and _prev.getprevious() is not None and _prev.tag == qn('w:p') and _prev.find('.//' + qn('w:keepNext')) is not None and _prev.getprevious().tag == qn('w:p') and _prev.getprevious().find('.//' + qn('w:keepNext')) is not None:
+            _prev = _prev.getprevious()
+        _target = _prev if _prev is not None and _prev.tag == qn('w:p') else _tb.rows[0].cells[0].paragraphs[0]._p
+        _pPr = _target.find(qn('w:pPr'))
+        if _pPr is None: _pPr = OxmlElement('w:pPr'); _target.insert(0, _pPr)
+        if _pPr.find(qn('w:pageBreakBefore')) is None:
+            _pb = OxmlElement('w:pageBreakBefore'); _ks = _pPr.find(qn('w:keepNext'))
+            (_ks.addnext(_pb) if _ks is not None else _pPr.insert(1 if _pPr.find(qn('w:pStyle')) is not None else 0, _pb))
+# the heading and the short lead-in sentence before a figure move with the figure
+_body = list(doc.element.body)
+for _i, _el in enumerate(_body):
+    if _el.tag == qn('w:p') and _el.findall('.//' + qn('w:drawing')):
+        for _prev in reversed(_body[max(0, _i - 3):_i]):
+            if _prev.tag != qn('w:p'): break
+            if any((_bm.get(qn('w:name')) or '').startswith('_Toc_c') for _bm in _prev.iter(qn('w:bookmarkStart'))): break   # a caption belongs to the block above it
+            _txt = ''.join(x.text or '' for x in _prev.iter(qn('w:t')))
+            if len(_txt) > 400: break
+            _pPr = _prev.find(qn('w:pPr'))
+            if _pPr is None: _pPr = OxmlElement('w:pPr'); _prev.insert(0, _pPr)
+            if _pPr.find(qn('w:keepNext')) is None: _pPr.insert(1 if _pPr.find(qn('w:pStyle')) is not None else 0, OxmlElement('w:keepNext'))
+            if _pPr.find(qn('w:pStyle')) is not None and 'Heading' in (_pPr.find(qn('w:pStyle')).get(qn('w:val')) or ''): break
+
 doc.core_properties.author = ''; doc.core_properties.last_modified_by = ''
 doc.core_properties.title = S('doc_title') + PRODUCT
 doc.core_properties.comments = ''
 doc.save(OUT)
-json.dump({'headings': HEADINGS, 'captions': CAPTIONS, 'lof_title': SR['lof']}, open(OUT + '.meta.json', 'w'), ensure_ascii=False)
+json.dump({'headings': HEADINGS, 'captions': CAPTIONS, 'lof_title': SR['lof'], 'small_text': SMALL_TEXT}, open(OUT + '.meta.json', 'w'), ensure_ascii=False)
 print('ok', len(HEADINGS), sum(len(v) for v in CAPTIONS.values()))

@@ -7,5 +7,6 @@
 6. **Work in batches.** Verifier groups open questions by screen (open each screen once); writers update one feature per write; doc writes in batches.
 7. **Right-size agents.** Do not hardcode models. Before spawning an agent run `python3 -I scripts/route_model.py <tool> <task> key=value...` (see `references/model-routing.md`) and pass the returned model and effort to that agent; `inherit` means leave it unset. At most 4 agents in parallel.
 8. **Gate before polish.** Lint must pass before review; review only modules that passed; deepen only the lowest-scoring features; skip Phase 4 rows already answered.
-9. **No loops.** Fix each lint FAIL once, then re-lint; do not re-read untouched features.
+9. **Slices, not files.** An agent reads its own slice: `inventory_check.py --slice N` for inventory rows, `spec_lint.py --open N` for unanswered questions (file:line), `spec_lint.py --bar` for features to deepen; then Read with offsets. Module files reach 100 KB; the inventory 40 KB.
+10. **No loops.** Fix each lint FAIL once, then re-lint; do not re-read untouched features.
 Accuracy guards that never get skipped: source labels, lint gate, three allowed answer prefixes, safety rules, privacy grep before delivery.

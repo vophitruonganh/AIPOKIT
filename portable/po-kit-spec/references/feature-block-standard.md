@@ -19,7 +19,7 @@ The template has 16 required blocks plus an optional Formulas block (rows below;
 | 14 | Module links | Table: In/Out / Module / Data / When |
 | 15 | Notifications, audit log & print/export | Who is notified, what is audit-logged, what print/export contains |
 | 16 | Test cases | Table: `TC-N.M.k` / Precondition / Steps / Expected / Type (Main, Alternate, Edge, Permission). >=6 for a core feature, >=3 minor, at least one Edge and one Permission |
-| 17 | Open questions & assumptions | Table: Question / Assumption / Owner / Priority / Answer. Every uncertainty goes here; owner "QA (app dev)" if testable on the app. Phase 4 writes the result into the Answer column (add it if missing); lint treats a row as answered when it starts with an allowed prefix |
+| 17 | Open questions & assumptions | Table: Question / Assumption / Owner / Priority / Answer. Every uncertainty goes here; owner "QA" if testable on the app. Phase 4 writes the result into the Answer column (add it if missing); lint treats a row as answered when it starts with an allowed prefix |
 Blocks 8, 9, 11 may be absent when there are no fields, states or formulas; any other inapplicable block says `Not applicable: <reason>`.
 
 Optional in any feature: one or more ` ```diagram <type>: <title>` blocks (sequence, flow, decision, timeline, state) written by `spec-diagrammer` after the Alternate flows block; syntax in `references/diagrams.md`. Writers do not need to add them.

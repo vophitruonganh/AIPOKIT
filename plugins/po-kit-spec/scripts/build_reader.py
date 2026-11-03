@@ -18,7 +18,7 @@ BLK['Open questions & assumptions'] = PK['blocks']['open_questions']
 SEC = {'1. Product overview':'1. Tổng quan sản phẩm','Standard glossary':'Thuật ngữ','How to read this document':'Cách đọc tài liệu','User roles':'Vai trò người dùng','Common conventions for all screens':'Quy ước chung cho mọi màn hình','2. Navigation structure':'2. Cấu trúc điều hướng','4. Compliance & security':'4. Tuân thủ và bảo mật','Bugs and spec deviations found during recon':'Lỗi và sai lệch spec đã tìm thấy','5. Gaps and points to confirm':'5. Khoảng trống và điểm cần xác nhận','Summary': 'Tóm tắt', 'Roles & permissions': 'Vai trò và quyền', 'Feature map': 'Danh sách tính năng',
        'Appendix A — Integration & API': 'Phụ lục A: tích hợp và API'}
 HDR = {'Role': 'Vai trò', 'Can do': 'Được làm', 'Cannot do': 'Không được làm', 'Feature': 'Tính năng', 'Screen': 'Màn hình',
-       'Main role': 'Vai trò chính', 'Status on dev': 'Tình trạng trên dev', 'Question': 'Câu hỏi', 'Assumption': 'Giả định',
+       'Main role': 'Vai trò chính', 'Status on dev': 'Tình trạng hiện tại', 'Question': 'Câu hỏi', 'Assumption': 'Giả định',
        'Owner': 'Người trả lời', 'Priority': 'Ưu tiên', 'Answer': 'Trả lời', 'Situation': 'Tình huống', 'Expected': 'Kỳ vọng',
        'Source': 'Nguồn', 'In/Out': 'Vào/Ra', 'Module': 'Module', 'Data': 'Dữ liệu', 'When': 'Khi nào', 'Precondition': 'Điều kiện trước',
        'Steps': 'Các bước', 'Type': 'Loại', 'Required': 'Bắt buộc', 'Format': 'Định dạng', 'Default': 'Mặc định',

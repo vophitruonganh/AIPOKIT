@@ -181,7 +181,7 @@
       "Use case name",
       "Screen",
       "Main actors",
-      "Status on dev"
+      "Current status"
     ],
     "uc_list_title": "Use case list of module %d. %s",
     "diagram_intro": "To make the actors and functional requirements easier to see, the functions are modelled as use case diagrams in the following sections.",
@@ -209,7 +209,7 @@
     "r_trigger": "Trigger",
     "r_pre": "Preconditions",
     "r_post": "Postconditions",
-    "r_status": "Status on dev",
+    "r_status": "Current status",
     "r_main": "Main event flow (Success)",
     "r_alt": "Alternate event flow",
     "none": "None",

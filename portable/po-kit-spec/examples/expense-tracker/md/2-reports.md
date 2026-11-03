@@ -12,7 +12,7 @@ The Reports module shows users how they spend.
 
 ## Feature map
 
-| # | Feature | Screen | Main role | Status on dev |
+| # | Feature | Screen | Main role | Status |
 | --- | --- | --- | --- | --- |
 | 2.1 | Monthly report | /m2/f1 | User | Works |
 

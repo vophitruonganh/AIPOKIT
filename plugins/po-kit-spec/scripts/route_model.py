@@ -2,7 +2,7 @@
 """Pick a model tier and effort for one task from measurable complexity. No model name is hardcoded here.
 Usage: route_model.py <tool> <task> [key=value ...]
   tool : claude-code | codex | chatgpt | <any key in models.json> (unknown -> default)
-  task : recon | write | deepen | review | verify | export | translate
+  task : recon | write | deepen | review | verify | diagram | fix | reword | export | translate
   keys : screens fields roles states api rules defects_prev   (numbers)
          has_writes no_test_data money_or_legal independent_review   (0/1)
 Prints one JSON line: score, tier, effort, model, why. Reads models.json next to this script,
@@ -40,8 +40,10 @@ def route(tool, task, m):
     order = ['light', 'standard', 'deep']
     if task in ('recon', 'verify') and m.get('has_writes') and tier == 'light':
         tier = 'standard'; why.append('floor: browser task with writes')
-    if task in ('export', 'translate'):
+    if task in ('export', 'translate', 'fix'):
         tier = 'light'
+    if task == 'reword' and tier == 'light':
+        tier = 'standard'; why.append('floor: rewording must keep the meaning')
     effort = 'low'
     for e in ('medium', 'high'):
         if score >= cfg['effort_cuts'][e]: effort = e

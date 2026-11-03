@@ -6,7 +6,7 @@
 *In your language. In your template. With evidence for every claim.*
 
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757)
-![version](https://img.shields.io/badge/po--kit--spec-v1.6.1-blue)
+![version](https://img.shields.io/badge/po--kit--spec-v1.8.0-blue)
 ![languages](https://img.shields.io/badge/document%20languages-en%20%C2%B7%20vi%20%C2%B7%20fr-brightgreen)
 ![safety](https://img.shields.io/badge/crawling-read--only%20by%20default-success)
 
@@ -89,7 +89,7 @@ The installer takes 1 to 5 minutes and does everything:
 ```text
 ✔ Successfully added marketplace: aipokit
 ✔ Successfully installed plugin: po-kit-spec@aipokit (scope: user)
-    Version: 1.6.1
+    Version: 1.8.0
     Status: ✔ enabled
 Setup done. Python modules are in /Users/<you>/.po-kit/venv
 Environment OK
@@ -128,7 +128,7 @@ unzip -oq ~/Downloads/AIPOKIT-main.zip -d /tmp/aipokit && bash /tmp/aipokit/*/in
 
 ## 4. Check that it works
 
-1. In Terminal: `claude plugin list` shows **po-kit-spec@aipokit**, version **1.6.1**, **enabled**.
+1. In Terminal: `claude plugin list` shows **po-kit-spec@aipokit**, version **1.8.0**, **enabled**.
 2. Close any open Claude Code window and **start a new session** (commands load only in new sessions).
 3. In the new session type `/po-kit-spec:` and you see the list of commands (`start`, `setup`, `export-srs`…).
 4. Optional: type `/po-kit-spec:setup`. Claude answers "Environment OK" or installs what is missing.
@@ -293,6 +293,8 @@ Full rules: `plugins/po-kit-spec/skills/reverse-spec-builder/references/safety-r
 
 | Version | Change |
 | --- | --- |
+| 1.8.0 | Headless browser runner (`scripts/browser/pokit-browser.mjs`): recon and verify of a web app run as one script in a headless browser on the user's computer, several pages in parallel, with no model turn per click (real app: one CRUD screen in about 35 s, a read-only screen 3 to 9 s). One-line setup (`setup-browser.sh`, Windows `setup-browser.ps1`; Node via Homebrew or winget when missing, nvm / fnm / volta detected; falls back to the installed Chrome or Edge when the Chromium download is blocked), `login` (the user signs in once in a window; the login stays in a local profile, `forget` deletes it), `calibrate` (finds the fastest number of parallel pages), `doctor` (prints the fix for each missing item), `status` (live progress). Progress everywhere: setup steps `[n/5]` with seconds, each job and each step inside a job in plain words, a 'still working' line every 10 s, `status --watch`. Safety: read-only jobs abort any request that changes data, every job aborts send / pay / sign / export / print requests, analytics hosts blocked, CRUD only on `TEST` names, jobs on the same route never overlap, left-overs checked again after a reload, a failed step is reported as WARN (never a false green). autowalk: `AW.crud` with `checks` (press Save with one bad value each, delete a TEST row the app accepts), waits on events instead of fixed sleeps, list counts from the footer, the rows and the list API, toasts tied to their step, Radix menus opened with a real pointer sequence, API shapes captured from page load. New reference `browser-runner.md`; preflight and drivers point to it. |
+| 1.7.0 | Style gate: `style_check.py` checks the wording of the spec (survey talk, document status, dev hosts and environment words, endpoints outside Appendix A, long sentences, tone placement, labels missing from the inventory) and the exported Word / PDF (heading and caption numbers, contents links and pages, English left in a Vietnamese document, cover, personal emails, page layout: lone headings, captions apart from figures, split rows, short tables split over two pages, empty page bottoms, narrow columns). Export runs check, fix at the cause, check again. Build: rows never break, short tables start on a new page when the renderer split them (`pages.json` → `table_breaks`), headings and lead-in sentences stay with their figure, table captions stay with their table, column widths fit the longest word, empty columns are dropped, source tags and block headings are translated in Vietnamese documents, the data model appendix is no longer read as open questions. Faster and cheaper: page checks find tables from the ruled lines (`tablefind.py`, a full check takes seconds instead of minutes), the build loop stops when no page moves and a dropped table break is never dropped twice, `style_check.py --fix` rewrites quotes, tone marks and environment words itself, the wording gate also runs after Phase 2 and Phase 4, writer and verifier templates no longer produce survey or environment wording, `spec_lint.py --bar` lists the features to deepen, model routing adds the tasks `diagram`, `fix` and `reword`, small modules share one agent, markdown is the default storage. Agents read slices (`inventory_check.py --slice`, `spec_lint.py --open`) instead of whole files. Diagrams are rendered once and reused while the build loop runs; activity diagrams stay legible (text at least 7 pt); a block label left alone at a page bottom moves with its table; survey wording about what was not clicked or which TEST record was used is caught (W1), framework class names too (W13). |
 | 1.6.1 | The SRS describes the product only: no source / environment / account lines on the cover (`source_line`, `source_detail` dropped), no "as-is, for the PO to confirm" wording, no "C. Environment" appendix in modules (not-visible items move to C), endpoints without host or survey date; survey details stay in `source/` and the run log. |
 | 1.6.0 | New document look: `doc_style` presets (`slate` default: Inter, teal headings and header rows, light borders, zebra rows; `navy`, `mint`, `legacy`); clickable table of contents and list of figures (bookmarks, PDF links and outline); UML-correct diagrams (ellipse use cases with stick-figure actors, «include»/«extend» from `usecase` blocks, decision diamonds with [guard]/[else], dashed arrows for replies only, amber for unverified) and a notation table in section 1; diagram colours follow the document, auto-detected from a reference Word file (`style_detect.py`) with config override and default fallback; card-style diagrams with shadows (Chromium render); dense module links drawn as a matrix. |
 | 1.5.0 | Diagrams chosen by content: a planner scores 14 diagram types from the spec (Must / Should / Could), profiles `full` / `classic` / `po` / `dev`, new `spec-diagrammer` agent and `diagram_check.py` gate; SRS gains a context diagram, cross-module link map, activity diagrams with branches, sequence, screen flow, decision table, timeline, screen map, permission matrix and a 3.4 Data requirements ERD; PNG + SVG. |

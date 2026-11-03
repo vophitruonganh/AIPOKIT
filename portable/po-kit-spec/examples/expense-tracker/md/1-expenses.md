@@ -12,7 +12,7 @@ The Expenses module helps users manage personal spending.
 
 ## Feature map
 
-| # | Feature | Screen | Main role | Status on dev |
+| # | Feature | Screen | Main role | Status |
 | --- | --- | --- | --- | --- |
 | 1.1 | Record an expense | /m1/f1 | User | Works |
 | 1.2 | Expense list | /m1/f2 | User | Works |

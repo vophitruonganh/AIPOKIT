@@ -181,7 +181,7 @@
       "Tên use case",
       "Màn hình",
       "Tác nhân chính",
-      "Trạng thái trên dev"
+      "Trạng thái hiện tại"
     ],
     "uc_list_title": "Danh sách use case module %d. %s",
     "diagram_intro": "Để hình dung rõ hơn về các tác nhân cũng như yêu cầu chức năng của hệ thống, các chức năng được mô hình hóa dưới dạng biểu đồ use case ở các mục sau.",
@@ -209,7 +209,7 @@
     "r_trigger": "Sự kiện kích hoạt",
     "r_pre": "Tiền điều kiện",
     "r_post": "Hậu điều kiện",
-    "r_status": "Trạng thái trên dev",
+    "r_status": "Trạng thái hiện tại",
     "r_main": "Luồng sự kiện chính (Thành công)",
     "r_alt": "Luồng sự kiện thay thế",
     "none": "Không có",

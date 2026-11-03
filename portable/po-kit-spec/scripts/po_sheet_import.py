@@ -2,7 +2,7 @@
 """PO loop step 2: load the Product Owner's answered sheet back into the spec.
 Usage: po_sheet_import.py <md_dir> <answers.xlsx> [config.json] [--dry-run]
 For each row with a Decision:
-  open question  Accept/Change/Reject -> Answer cell "PO decided <date> (<who>): <text>"; Check on app -> owner "QA (app dev)", stays open
+  open question  Accept/Change/Reject -> Answer cell "PO decided <date> (<who>): <text>"; Check on app -> owner "QA", stays open
   proposed rule  Accept -> label becomes "PO decided <date>"; Change -> rule text replaced; Reject -> rule marked not applicable
 Before writing, the current md folder is copied to <spec dir>/versions/v<version>/md. Then it writes, next to the md folder:
   po-apply.md   decided points whose feature text (flows, fields, AC, TC) a spec-writer must now align
@@ -87,7 +87,7 @@ def main():
             f, q = hit; L = lines_of(f['file']); cells = list(q['cells'])
             if P.ANSWERED.match(cells[4]): continue
             if r['dec'] == 'check':
-                cells[2] = 'QA (app dev)'; verify.append((f, 'TBD-%s.%d' % (f['id'], q['n']), cells[0]))
+                cells[2] = 'QA'; verify.append((f, 'TBD-%s.%d' % (f['id'], q['n']), cells[0]))
             else:
                 txt = cells[1] if r['dec'] == 'accept' else (r['ans'] if r['dec'] == 'change' else '%s. %s' % (REJECT.get(lang, REJECT['en']), r['ans']))
                 cells[4] = 'PO decided %s (%s): %s' % (r['date'], r['who'], esc(txt)); nq += 1

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Quality gate for a spec exported as markdown (one file per module tab).
-Usage: spec_lint.py <md_dir> [--csv out.csv]
+Usage: spec_lint.py <md_dir> [--csv out.csv] [--bar]
+  --open [N]  only list the unanswered open questions (file:line, feature, question), of module N if given,
+              so a verifier reads those lines and no whole module file
+  --bar  also list the features under the Phase 3 bar and the blocks to deepen (main flow < 5 steps, < 5 rules,
+         no alternate flow, < 6 test cases), so the deepen step needs no reading or counting
 Per feature section ("## N.M Title") checks:
   - the required blocks (references/feature-block-standard.md)
   - BR/AC/TC numbering (BR-N.M.k, AC-N.M.k, TC-N.M.k: present, sequential)
@@ -26,8 +30,23 @@ PROPOSAL_LABEL = tuple(L.aliases('labels', 'proposal'))
 def label_count(body, key):
     return sum(len(re.findall(re.escape(a), body)) for a in L.aliases('labels', key))
 
+def open_rows(d, mod=None):
+    n = 0
+    for f in sorted(glob.glob(os.path.join(d, '[1-9]*.md'))):
+        if mod and not os.path.basename(f).startswith(mod + '-'): continue
+        feat, inq = '', False
+        for ln, line in enumerate(open(f, encoding='utf-8'), 1):
+            m = re.match(r'^## (\d+\.\d+) ', line)
+            if m: feat, inq = m.group(1), False; continue
+            if line.startswith('**'): inq = bool(re.match(r'\*\*(%s)\*\*' % alt('blocks', 'open_questions'), line)); continue
+            if inq and line.startswith('|') and not line.startswith('| ---') and not line.startswith(Q_COLS) and not ANSWER.search(line):
+                n += 1; print('%s:%d  %s  %s' % (os.path.basename(f), ln, feat, line.strip('| \n').split('|')[0].strip()[:120]))
+    print('%d open questions without an answer' % n)
+
 def main():
     d = sys.argv[1]; out = None
+    if '--open' in sys.argv:
+        k = sys.argv.index('--open'); open_rows(d, sys.argv[k + 1] if len(sys.argv) > k + 1 and not sys.argv[k + 1].startswith('-') else None); sys.exit(0)
     if '--csv' in sys.argv: out = sys.argv[sys.argv.index('--csv') + 1]
     rows = []; fails = 0
     for f in sorted(glob.glob(os.path.join(d, '[1-9]*.md'))):
@@ -60,16 +79,28 @@ def main():
             unlabelled = [x for x in CLAIM.finditer(body) if not body[:x.start()].endswith(PROPOSAL_PREFIX + PROPOSAL_LABEL)]
             if unlabelled and not lab['observed'] and not lab['inferred']:
                 problems.append('absolute/numeric claims but no source label')
+            blocks = {}
+            for bm in re.finditer(r'^\*\*([^*]+?)\*\*(.*?)(?=^\*\*[^*]+?\*\*|\Z)', body, re.M | re.S):
+                blocks[L.match('blocks', bm.group(1))] = bm.group(2)
+            under = []
+            if len(re.findall(r'^\d+\. ', blocks.get('main_flow', ''), re.M)) < 5: under.append('main flow < 5 steps')
+            if len(set(re.findall(r'\bBR-%s\.%s\.\d+' % (mod, ft), blocks.get('business_rules', '')))) < 5: under.append('rules < 5')
+            if len([l for l in blocks.get('alt_flow', '').split('\n') if l.strip().lstrip('-* ')]) < 1: under.append('no alternate flow')
+            if len(tcs) < 6: under.append('test cases < 6 (core feature)')
             fails += bool(problems)
             rows.append(dict(feature=pid, title=re.sub(r'\s*`.*$', '', head)[:50], tc=len(tcs), questions=len(qrows),
                              unanswered=unanswered, observed=lab['observed'], inferred=lab['inferred'],
                              proposal=lab['proposal'], unverified=lab['unverified'],
-                             share_unverified=round(share_unverified, 2), problems='; '.join(problems)))
+                             share_unverified=round(share_unverified, 2), problems='; '.join(problems), deepen='; '.join(under)))
     for r in rows:
         print('%s %-5s %-50s TC=%-2d Q=%-2d unanswered=%-2d OBS=%-3d PRO=%-3d UNV=%-3d %s' % (
             'FAIL' if r['problems'] else 'ok  ', r['feature'], r['title'], r['tc'], r['questions'], r['unanswered'],
             r['observed'], r['proposal'], r['unverified'], r['problems']))
     print('\n%d features, %d failing' % (len(rows), fails))
+    if '--bar' in sys.argv:
+        low = [r for r in rows if r['deepen']]
+        print('\nunder the Phase 3 bar: %d' % len(low))
+        for r in low: print('deepen %-5s %s' % (r['feature'], r['deepen']))
     if out and rows:
         with open(out, 'w', newline='', encoding='utf-8') as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)

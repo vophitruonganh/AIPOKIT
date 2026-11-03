@@ -24,7 +24,7 @@ WORDS = {  # status column header, id header, due header, unconfirmed (cell, inl
 }
 TC_HDR_NOTE = None
 HDR = {'Role': 'Vai trò', 'Can do': 'Được làm', 'Cannot do': 'Không được làm', 'Feature': 'Tính năng', 'Screen': 'Màn hình',
-       'Main role': 'Vai trò chính', 'Status on dev': 'Tình trạng trên dev', 'Question': 'Câu hỏi', 'Assumption': 'Giả định',
+       'Main role': 'Vai trò chính', 'Status on dev': 'Tình trạng hiện tại', 'Question': 'Câu hỏi', 'Assumption': 'Giả định',
        'Owner': 'Người trả lời', 'Priority': 'Ưu tiên', 'Answer': 'Trả lời', 'Situation': 'Tình huống', 'Expected': 'Kỳ vọng',
        'Source': 'Nguồn', 'In/Out': 'Vào/Ra', 'Module': 'Module', 'Data': 'Dữ liệu', 'When': 'Khi nào', 'Precondition': 'Điều kiện trước',
        'Steps': 'Các bước', 'Type': 'Loại', 'Required': 'Bắt buộc', 'Format': 'Định dạng', 'Default': 'Mặc định',
@@ -32,7 +32,8 @@ HDR = {'Role': 'Vai trò', 'Can do': 'Được làm', 'Cannot do': 'Không đư�
        'Column': 'Cột', 'Button': 'Nút', 'Result': 'Kết quả', 'Enabled': 'Khi bật', 'From': 'Từ', 'To': 'Đến', 'Who': 'Ai',
        'Blocking condition': 'Điều kiện chặn', 'Effect': 'Hệ quả', 'Name': 'Tên', 'Purpose': 'Mục đích', 'Term': 'Thuật ngữ',
        'Meaning': 'Nghĩa', 'Route': 'Đường dẫn', 'Main tasks': 'Việc chính', 'Main module': 'Module chính', 'Label': 'Nhãn',
-       'Observed': 'Quan sát', 'Severity': 'Mức độ', 'Features': 'Tính năng', 'File': 'File'}
+       'Observed': 'Quan sát', 'Severity': 'Mức độ', 'Features': 'Tính năng', 'File': 'File', 'Point': 'Nội dung',
+       'Why': 'Lý do', 'Kind': 'Loại', 'Path': 'Đường dẫn', 'Status': 'Trạng thái', 'Expected result': 'Kết quả mong đợi'}
 GWT = {'vi': (('Given', 'Cho'), ('When', 'Khi'), ('Then', 'Thì')), 'fr': (('Given', 'Étant donné'), ('When', 'Quand'), ('Then', 'Alors'))}
 TAG = {'decided': r'PO decided', 'observed': r'Observed', 'inferred': r'Inferred from API', 'proposal': r'PO proposal', 'unverified': r'Unverified'}
 DT = r'(?: \d{4}-\d{2}-\d{2})?'
@@ -70,6 +71,7 @@ def transform(text, lang='en', tests_to_appendix=True):
     tcs = {}; titles = {}                # test cases moved to a module appendix
     while i < len(lines):
         l = lines[i]
+        if l.startswith('## '): block = ''          # a new section (feature or appendix) closes the previous block
         m = re.match(r'^## (\d+\.\d+)\b', l)
         if m:
             feat = m.group(1); counts[feat] = [0, 0, 0, 0]; qn[feat] = 0; block = ''

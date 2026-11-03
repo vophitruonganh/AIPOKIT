@@ -6,6 +6,10 @@ import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import pokit_env; pokit_env.ensure()
 import sys, re, os, glob, zipfile
+
+def _dummy(n):
+    d = re.sub(r'\D', '', n)
+    return len(set(d[1:])) <= 2 or '123456' in d or '234567' in d or '00000' in d
 def read(path):
     if os.path.isdir(path):
         return {f: open(f, encoding='utf-8').read() for f in glob.glob(os.path.join(path, '*.md'))}, []
@@ -24,8 +28,12 @@ def read(path):
 texts, props = read(sys.argv[1]); terms = sys.argv[2:]
 bad = ['property ' + p for p in props]
 for name, t in texts.items():
-    for m in re.finditer(r'[\w.+-]+@[\w-]+\.[\w.-]+', t): bad.append('%s: email %s' % (os.path.basename(name), m.group(0)))
-    for m in re.finditer(r'(?<![\w.-])(?:\+\d{1,3}[\s.-]?|0)\d(?:[\s.-]?\d){7,10}(?![\w-])', t): bad.append('%s: phone-like %s' % (os.path.basename(name), m.group(0).strip()))
+    for m in re.finditer(r'[\w.+-]+@[\w-]+\.[\w.-]+', t):
+        if re.match(r'(?i)(?:cskh|support|hotro|info|contact|lienhe|noreply|no-reply|help|admin|sales)@', m.group(0)) or re.search(r'(?i)@(?:example\.\w+|b\.co|test\.\w+)$', m.group(0)): continue   # role mailboxes and example addresses
+        bad.append('%s: email %s' % (os.path.basename(name), m.group(0)))
+    for m in re.finditer(r'(?<![\w.-])(?:\+\d{1,3}[\s.-]?|0)\d(?:[\s.-]?\d){7,10}(?![\w-])', t):
+        if _dummy(m.group(0)): continue   # obvious example numbers (0000000000, 0123456789, 0901234567)
+        bad.append('%s: phone-like %s' % (os.path.basename(name), m.group(0).strip()))
     for term in terms:
         n = len(re.findall(re.escape(term), t, re.I))
         if n: bad.append('%s: term %r x%d' % (os.path.basename(name), term, n))
